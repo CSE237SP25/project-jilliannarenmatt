@@ -3,16 +3,16 @@ package login;
 /**
  * Demo class showing how to use the login system.
  */
-public class bankLoginDemo {
+public class BankLoginDemo {
     public static void main(String[] args) {
         System.out.println("Welcome to the Banking System");
         System.out.println("Please login or create an account");
         
         // Create a login manager to handle user authentication
-        loginManager manager = new loginManager();
+        LoginManager manager = new LoginManager();
         
         // Start the login/registration process
-        user authenticatedUser = manager.start();
+        User authenticatedUser = manager.start();
         
         // Check if login/registration was successful
         if (authenticatedUser != null) {

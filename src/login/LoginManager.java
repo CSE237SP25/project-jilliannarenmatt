@@ -1,21 +1,22 @@
 package login;
-
 import java.util.Scanner;
 
 /**
  * Manages user login and registration functionality.
  * This class provides an interface for users to login or create a new account.
  */
-public class loginManager {
+public class LoginManager {
     private Scanner scanner;
-    private user currentUser;
+    private User currentUser;
+    private UserManager userManager;
     
     /**
      * Creates a new LoginManager.
      */
-    public loginManager() {
+    public LoginManager() {
         scanner = new Scanner(System.in);
         currentUser = null;
+        userManager = UserManager.getInstance();
     }
     
     /**
@@ -23,7 +24,7 @@ public class loginManager {
      * 
      * @return The authenticated user if login/registration is successful, null otherwise
      */
-    public user start() {
+    public User start() {
         boolean running = true;
         
         while (running) {
@@ -70,12 +71,12 @@ public class loginManager {
      * 
      * @return The authenticated user if login is successful, null otherwise
      */
-    private user loginUser() {
+    private User loginUser() {
         System.out.println("\n----- LOGIN -----");
         String usernameText = getStringInput("Enter your username: ");
         String passwordText = getStringInput("Enter your password: ");
         
-        user loggedInUser = user.login(usernameText, passwordText);
+        User loggedInUser = userManager.login(usernameText, passwordText);
         if (loggedInUser != null) {
             System.out.println("Login successful!");
             return loggedInUser;
@@ -90,38 +91,42 @@ public class loginManager {
      * 
      * @return The newly created user if registration is successful, null otherwise
      */
-    private user registerUser() {
+    private User registerUser() {
         System.out.println("\n----- REGISTER -----");
-        System.out.println(username.getRequirements());
+        System.out.println(Username.instance().getRequirements());
         
         String usernameText = "";
         boolean validUsername = false;
         
         while (!validUsername) {
             usernameText = getStringInput("Choose a username: ");
-            if (username.isValid(usernameText)) {
+            
+            // First check if username already exists
+            if (userManager.usernameExists(usernameText)) {
+                System.out.println("Username already exists. Please choose another one.");
+                continue; // Skip the rest of the loop and prompt again
+            }
+            
+            // Then check if the username is valid
+            if (Username.instance().isValid(usernameText)) {
                 validUsername = true;
             } else {
-                if (user.usernameExists(usernameText)) {
-                    System.out.println("Username already exists. Please choose another one.");
-                } else {
-                    System.out.println("Invalid username. " + username.getRequirements());
-                }
+                System.out.println("Invalid username. " + Username.instance().getRequirements());
             }
         }
         
-        System.out.println(password.getRequirements());
+        System.out.println(Password.instance().getRequirements());
         
         String passwordText = "";
         boolean validPassword = false;
         
         while (!validPassword) {
             passwordText = getStringInput("Choose a password: ");
-            if (password.isValid(passwordText)) {
+            if (Password.instance().isValid(passwordText)) {
                 validPassword = true;
             } else {
                 System.out.println("Invalid password.");
-                System.out.println(password.getValidationErrors(passwordText));
+                System.out.println(Password.instance().getValidationErrors(passwordText));
             }
         }
         
@@ -131,7 +136,7 @@ public class loginManager {
             return null;
         }
         
-        user newUser = user.createAccount(usernameText, passwordText);
+        User newUser = userManager.createAccount(usernameText, passwordText);
         if (newUser != null) {
             System.out.println("Registration successful!");
             return newUser;
