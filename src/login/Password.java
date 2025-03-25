@@ -7,11 +7,31 @@ import java.util.regex.Pattern;
  * Class for handling password validation and security operations.
  * Includes methods to check if passwords meet security requirements.
  */
-public class password {
+public class Password {
     
     // Password validation constants
     private static final int MIN_LENGTH = 8;
     private static final String SPECIAL_CHARS = "!@#$%^&*()_+-=[]{}|;':,./<>?";
+    
+    // Non-static instance to be used by other classes
+    private static final Password INSTANCE = new Password();
+    
+    /**
+     * Private constructor to enforce singleton pattern.
+     * This class is meant to be used through its instance() method.
+     */
+    private Password() {
+        // Private constructor
+    }
+    
+    /**
+     * Get the singleton instance of this class.
+     * 
+     * @return The Password validator instance
+     */
+    public static Password instance() {
+        return INSTANCE;
+    }
     
     /**
      * Validates if a password meets all security requirements:
@@ -21,38 +41,38 @@ public class password {
      * - Contains at least one digit
      * - Contains at least one special character
      * 
-     * @param password The password to validate
+     * @param passwordText The password to validate
      * @return true if password meets all requirements, false otherwise
      */
-    public static boolean isValid(String password) {
-        return hasMinimumLength(password) &&
-               hasUpperCase(password) &&
-               hasLowerCase(password) &&
-               hasDigit(password) &&
-               hasSpecialChar(password);
+    public boolean isValid(String passwordText) {
+        return hasMinimumLength(passwordText) &&
+               hasUpperCase(passwordText) &&
+               hasLowerCase(passwordText) &&
+               hasDigit(passwordText) &&
+               hasSpecialChar(passwordText);
     }
     
     /**
      * Checks if password meets minimum length requirement.
      * 
-     * @param password The password to check
+     * @param passwordText The password to check
      * @return true if password is long enough, false otherwise
      */
-    private static boolean hasMinimumLength(String password) {
-        return password != null && password.length() >= MIN_LENGTH;
+    private boolean hasMinimumLength(String passwordText) {
+        return passwordText != null && passwordText.length() >= MIN_LENGTH;
     }
     
     /**
      * Checks if password contains at least one uppercase letter.
      * 
-     * @param password The password to check
+     * @param passwordText The password to check
      * @return true if password contains uppercase, false otherwise
      */
-    private static boolean hasUpperCase(String password) {
-        if (password == null) return false;
+    private boolean hasUpperCase(String passwordText) {
+        if (passwordText == null) return false;
         
         Pattern pattern = Pattern.compile("[A-Z]");
-        Matcher matcher = pattern.matcher(password);
+        Matcher matcher = pattern.matcher(passwordText);
         
         return matcher.find();
     }
@@ -60,14 +80,14 @@ public class password {
     /**
      * Checks if password contains at least one lowercase letter.
      * 
-     * @param password The password to check
+     * @param passwordText The password to check
      * @return true if password contains lowercase, false otherwise
      */
-    private static boolean hasLowerCase(String password) {
-        if (password == null) return false;
+    private boolean hasLowerCase(String passwordText) {
+        if (passwordText == null) return false;
         
         Pattern pattern = Pattern.compile("[a-z]");
-        Matcher matcher = pattern.matcher(password);
+        Matcher matcher = pattern.matcher(passwordText);
         
         return matcher.find();
     }
@@ -75,14 +95,14 @@ public class password {
     /**
      * Checks if password contains at least one digit.
      * 
-     * @param password The password to check
+     * @param passwordText The password to check
      * @return true if password contains digit, false otherwise
      */
-    private static boolean hasDigit(String password) {
-        if (password == null) return false;
+    private boolean hasDigit(String passwordText) {
+        if (passwordText == null) return false;
         
         Pattern pattern = Pattern.compile("[0-9]");
-        Matcher matcher = pattern.matcher(password);
+        Matcher matcher = pattern.matcher(passwordText);
         
         return matcher.find();
     }
@@ -90,14 +110,14 @@ public class password {
     /**
      * Checks if password contains at least one special character.
      * 
-     * @param password The password to check
+     * @param passwordText The password to check
      * @return true if password contains special character, false otherwise
      */
-    private static boolean hasSpecialChar(String password) {
-        if (password == null) return false;
+    private boolean hasSpecialChar(String passwordText) {
+        if (passwordText == null) return false;
         
         Pattern pattern = Pattern.compile("[" + Pattern.quote(SPECIAL_CHARS) + "]");
-        Matcher matcher = pattern.matcher(password);
+        Matcher matcher = pattern.matcher(passwordText);
         
         return matcher.find();
     }
@@ -107,7 +127,7 @@ public class password {
      * 
      * @return Password requirement description
      */
-    public static String getRequirements() {
+    public String getRequirements() {
         return "Password must contain at least " + MIN_LENGTH + " characters, including:\n" +
                "- At least one uppercase letter (A-Z)\n" +
                "- At least one lowercase letter (a-z)\n" +
@@ -118,29 +138,29 @@ public class password {
     /**
      * Gets detailed validation errors for a password.
      * 
-     * @param password The password to check
+     * @param passwordText The password to check
      * @return String containing all validation errors, or empty string if valid
      */
-    public static String getValidationErrors(String password) {
+    public String getValidationErrors(String passwordText) {
         StringBuilder errors = new StringBuilder();
         
-        if (!hasMinimumLength(password)) {
+        if (!hasMinimumLength(passwordText)) {
             errors.append("- Password must be at least ").append(MIN_LENGTH).append(" characters long\n");
         }
         
-        if (!hasUpperCase(password)) {
+        if (!hasUpperCase(passwordText)) {
             errors.append("- Password must contain at least one uppercase letter\n");
         }
         
-        if (!hasLowerCase(password)) {
+        if (!hasLowerCase(passwordText)) {
             errors.append("- Password must contain at least one lowercase letter\n");
         }
         
-        if (!hasDigit(password)) {
+        if (!hasDigit(passwordText)) {
             errors.append("- Password must contain at least one digit\n");
         }
         
-        if (!hasSpecialChar(password)) {
+        if (!hasSpecialChar(passwordText)) {
             errors.append("- Password must contain at least one special character\n");
         }
         

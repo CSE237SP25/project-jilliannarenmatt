@@ -1,16 +1,34 @@
 package login;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * Class for handling username validation.
  */
-public class username {
+public class Username {
     
     // Username validation constants
     private static final int MIN_LENGTH = 4;
     private static final int MAX_LENGTH = 20;
+    
+    // Singleton instance
+    private static final Username INSTANCE = new Username();
+    
+    /**
+     * Private constructor to enforce singleton pattern.
+     */
+    private Username() {
+        // Private constructor
+    }
+    
+    /**
+     * Get the singleton instance of this class.
+     * 
+     * @return The Username validator instance
+     */
+    public static Username instance() {
+        return INSTANCE;
+    }
     
     /**
      * Validates if a username meets all requirements:
@@ -18,27 +36,27 @@ public class username {
      * - Can only contain letters, numbers, and underscores
      * - Must start with a letter
      * 
-     * @param username The username to validate
+     * @param usernameText The username to validate
      * @return true if username meets all requirements, false otherwise
      */
-    public static boolean isValid(String username) {
-        if (username == null) {
+    public boolean isValid(String usernameText) {
+        if (usernameText == null) {
             return false;
         }
         
         // Check length
-        if (username.length() < MIN_LENGTH || username.length() > MAX_LENGTH) {
+        if (usernameText.length() < MIN_LENGTH || usernameText.length() > MAX_LENGTH) {
             return false;
         }
         
         // Check if starts with a letter
-        if (!Character.isLetter(username.charAt(0))) {
+        if (!Character.isLetter(usernameText.charAt(0))) {
             return false;
         }
         
         // Check allowed characters (letters, numbers, underscores)
         Pattern pattern = Pattern.compile("^[a-zA-Z][a-zA-Z0-9_]*$");
-        Matcher matcher = pattern.matcher(username);
+        Matcher matcher = pattern.matcher(usernameText);
         
         return matcher.matches();
     }
@@ -48,7 +66,7 @@ public class username {
      * 
      * @return Username requirement description
      */
-    public static String getRequirements() {
+    public String getRequirements() {
         return "Username must:\n" +
                "- Be between " + MIN_LENGTH + " and " + MAX_LENGTH + " characters long\n" +
                "- Start with a letter\n" +
@@ -58,27 +76,27 @@ public class username {
     /**
      * Gets validation errors for a username.
      * 
-     * @param username The username to check
+     * @param usernameText The username to check
      * @return String containing validation errors, or empty string if valid
      */
-    public static String getValidationErrors(String username) {
+    public String getValidationErrors(String usernameText) {
         StringBuilder errors = new StringBuilder();
         
-        if (username == null || username.isEmpty()) {
+        if (usernameText == null || usernameText.isEmpty()) {
             return "Username cannot be empty";
         }
         
-        if (username.length() < MIN_LENGTH || username.length() > MAX_LENGTH) {
+        if (usernameText.length() < MIN_LENGTH || usernameText.length() > MAX_LENGTH) {
             errors.append("- Username must be between ").append(MIN_LENGTH)
                   .append(" and ").append(MAX_LENGTH).append(" characters long\n");
         }
         
-        if (!Character.isLetter(username.charAt(0))) {
+        if (!Character.isLetter(usernameText.charAt(0))) {
             errors.append("- Username must start with a letter\n");
         }
         
         Pattern pattern = Pattern.compile("^[a-zA-Z0-9_]*$");
-        Matcher matcher = pattern.matcher(username);
+        Matcher matcher = pattern.matcher(usernameText);
         if (!matcher.matches()) {
             errors.append("- Username can only contain letters, numbers, and underscores\n");
         }
