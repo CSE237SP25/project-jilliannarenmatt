@@ -14,6 +14,7 @@ What user stories were completed this iteration?
 Updated these:
 
 Login to account
+
 Implement Login restrictions
 Open Checkings Account
 Withdraw from Account
