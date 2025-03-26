@@ -5,7 +5,7 @@ Team Members:
 * Jillian Tarlowe
 * Naren Chittem
 * Matt Walker
-*
+
 
 For each iteration you should answer the following:
 
@@ -13,25 +13,24 @@ What user stories were completed this iteration?
 
 Updated these:
 
-Login to account
-
-Implement Login restrictions
-Open Checkings Account
-Withdraw from Account
-Deposit into Account
-Have history tracked
-Pull recent history
+*Login to account
+*Implement Login restrictions
+*Open Checkings Account
+*Withdraw from Account
+*Deposit into Account
+*Have history tracked
+*Pull recent history
 
 
 What user stories do you intend to complete next iteration?
 
 Implement:
 
-Integrate accessing history + permissions
-Open Multiple accounts 
-Implement more types of accounts
-Display Information
-
+*Integrate accessing history + permissions
+*Open Multiple accounts 
+*Implement more types of accounts
+*Display Information
+*(I'm sure once/as we finish those we'll find something pressing)
 
 
 Is there anything that you implemented but doesn't currently work?
