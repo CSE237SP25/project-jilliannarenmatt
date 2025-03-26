@@ -13,13 +13,13 @@ What user stories were completed this iteration?
 
 Updated these:
 
-*Login to account
-*Implement Login restrictions
-*Open Checkings Account
-*Withdraw from Account
-*Deposit into Account
-*Have history tracked
-*Pull recent history
+* Login to account
+* Implement Login restrictions
+* Open Checkings Account
+* Withdraw from Account
+* Deposit into Account
+* Have history tracked
+* Pull recent history
 
 
 What user stories do you intend to complete next iteration?
