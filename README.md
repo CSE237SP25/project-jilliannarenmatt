@@ -26,11 +26,11 @@ What user stories do you intend to complete next iteration?
 
 Implement:
 
-*Integrate accessing history + permissions
-*Open Multiple accounts 
-*Implement more types of accounts
-*Display Information
-*(I'm sure once/as we finish those we'll find something pressing)
+* Integrate accessing history + permissions
+* Open Multiple accounts 
+* Implement more types of accounts
+* Display Information
+* (I'm sure once/as we finish those we'll find something pressing)
 
 
 Is there anything that you implemented but doesn't currently work?
