@@ -41,7 +41,11 @@ What commands are needed to compile and run your code from the command line (ple
 
 
 We haven't merged everything cohesively yet, but once we do, it should be just running the file, and then answering the according user prompts.
+
 You can run our current demo by going into the project, going into src, going into login, then running this command:
+
 java bankLoginDemo.java
+
 Here is the path: 
+
 project-jilliannarenmatt/src/login
