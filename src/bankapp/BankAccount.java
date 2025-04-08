@@ -1,4 +1,4 @@
-package AccountActions;
+package bankapp;
 public class BankAccount {
     private String accountType;
     private double accountBalance;

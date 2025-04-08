@@ -1,4 +1,4 @@
-package AccountActions;
+package bankapp;
 
 import java.util.Scanner;
 
