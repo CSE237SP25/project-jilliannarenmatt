@@ -1,9 +1,9 @@
-package ActionsTesting;
+package test;
+import bankapp.BankAccount;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import AccountActions.BankAccount;
 
 import static org.junit.jupiter.api.Assertions.*;
 
