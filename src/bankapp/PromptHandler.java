@@ -284,7 +284,6 @@ public class PromptHandler {
             
             System.out.println("5. View Transaction History");
             System.out.println("6. View Last 5 Transactions");
-
             System.out.println("0. Return to Account Selection");
             System.out.println("==============================");
             

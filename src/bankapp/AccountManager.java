@@ -34,14 +34,14 @@ public class AccountManager {
     }
 
     /**
-     * Gets the username associated with this account manager.
+     * Gets the username associated with this account manager
      * 
      * @return The username
      */
     public String getUsername() {
-        return this.username;
+        return this.username; 
     }
-    
+
     /**
      * Creates the directory structure for storing account data.
      */
