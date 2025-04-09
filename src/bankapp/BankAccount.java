@@ -1,7 +1,6 @@
 package bankapp;
-public class BankAccount {
-    private String accountType;
-    private double accountBalance;
+public abstract class BankAccount {
+    protected double accountBalance;
     
     /**
      * Class for initializing the checking account and its methods
@@ -9,8 +8,7 @@ public class BankAccount {
      */
     
     //simple initialization constructor
-    public BankAccount(String accountType) {
-        this.accountType = accountType;
+    public BankAccount() {
         this.accountBalance = 0.0;
     }
 
@@ -33,8 +31,8 @@ public class BankAccount {
         return false;
     }
 
-    public String getAccountType() {
-        return accountType;
-        //should be just checking for now
-    }
+    public abstract String getAccountType(); // implemented by subclasses
+
 }
+
+
