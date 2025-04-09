@@ -6,6 +6,34 @@ Team Members:
 * Naren Chittem
 * Matt Walker
 
+Iteration #2
+
+What user stories were completed this iteration?
+* Checking and savings accounts
+* 2 checking and 3 savings accounts allowed per user
+* Savings account has interest
+* Save history for each account separately
+* Display all transaction history and recent transaction history for each account under a user
+* Send money between accounts
+* Store personal info in account (name, address, etc.)
+
+What user stories do you intend to complete next iteration?
+* Let overdraft to a limit
+* Put interest rate on overdraft
+* Freeze accounts
+* Close accounts only when empty
+* Put limit on withdraw
+
+Is there anything that you implemented but doesn't currently work?
+Not that we have found yet
+
+
+What commands are needed to compile and run your code from the command line (please provide a script that users can run to launch your program)?
+./runBank.sh
+
+
+
+Iteration #1
 
 For each iteration you should answer the following:
 
