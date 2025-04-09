@@ -1,0 +1,5 @@
+phoneNumber=5026018122
+address=6023 Waterman Blvd. St. Louis, Mo
+fullName=Naren Chittem
+dateOfBirth=2003-07-13
+email=naren.chittem@gmail.com

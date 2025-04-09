@@ -1,7 +1,7 @@
 package test;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
-import login.Username;
+import bankapp.Username;
 
 class UsernameTest {
     

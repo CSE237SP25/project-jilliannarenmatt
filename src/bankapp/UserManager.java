@@ -1,4 +1,4 @@
-package login;
+package bankapp;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -118,6 +118,9 @@ public class UserManager {
         // Create and save new user
         User newUser = new User(usernameText, passwordText);
         if (newUser.saveUser()) {
+            // Initialize and save an empty profile for the new user
+            UserProfile newProfile = new UserProfile(usernameText);
+            newProfile.saveProfile();
             return newUser;
         }
         

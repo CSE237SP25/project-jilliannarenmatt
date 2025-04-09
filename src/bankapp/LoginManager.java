@@ -1,4 +1,4 @@
-package login;
+package bankapp;
 import java.util.Scanner;
 
 /**

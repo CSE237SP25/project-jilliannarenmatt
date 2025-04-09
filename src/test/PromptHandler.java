@@ -1,11 +1,11 @@
-package ActionsTesting;
+package test;
 
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.util.Scanner;
-import AccountActions.BankAccount;
-import AccountActions.PromptHandler;
+import bankapp.BankAccount;
+import bankapp.PromptHandler;
 
 import static org.junit.jupiter.api.Assertions.*;
 

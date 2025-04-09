@@ -1,4 +1,4 @@
-package login;
+package bankapp;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -15,6 +15,7 @@ import java.util.Base64;
 public class User {
     private String username;
     private String passwordHash;
+    private UserProfile profile;
     // Store the file in a data directory to make it more organized
     private static final String USER_FILE = "data/users.txt";
     private boolean isExistingUser;
@@ -139,6 +140,18 @@ public class User {
     public boolean validatePassword(String passwordText) {
         String hashedInput = hashPassword(passwordText);
         return passwordHash.equals(hashedInput);
+    }
+    
+    /**
+     * Gets the user's profile, loading it if necessary.
+     * 
+     * @return The user's profile
+     */
+    public UserProfile getProfile() {
+        if (profile == null) {
+            profile = UserProfile.loadProfile(username);
+        }
+        return profile;
     }
     
     /**
