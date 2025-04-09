@@ -3,8 +3,8 @@ package bankapp;
 public class SavingsAccount extends BankAccount {
     private double interestRate;
 
-    public SavingsAccount(double interestRate) {
-        super();
+    public SavingsAccount(String accountName, double interestRate) {
+        super(accountName);
         this.interestRate = interestRate;
     }
 
