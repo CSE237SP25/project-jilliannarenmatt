@@ -10,6 +10,7 @@ import bankapp.AccountStorage;
 
 class AccountStorageTest {
     private static final String TEST_USERNAME = "testuser";
+    private static final String TEST_ACCOUNT = "Checking1";
     private static final Path TEST_ROOT = Paths.get("..", "data", "testaccounts");
     private AccountStorage storage;
 
@@ -40,39 +41,67 @@ class AccountStorageTest {
     }
 
     @Test
-    void recordTransaction_createsFiles() throws IOException {
-        storage.recordTransaction(TEST_USERNAME, "Deposit $100");
-        Path userDir = TEST_ROOT.resolve(TEST_USERNAME);
+    void recordTransaction_createHistoryFile() throws IOException {
+        storage.recordTransaction(TEST_USERNAME, TEST_ACCOUNT, "Deposit $100");
+        Path historyFile = TEST_ROOT.resolve(TEST_USERNAME)
+                                  .resolve(TEST_ACCOUNT + "_history.txt");
         
-        assertTrue(Files.exists(userDir), "User directory should be created");
-        assertTrue(Files.exists(userDir.resolve("history.txt")), "History file should exist");
+        assertTrue(Files.exists(historyFile), "History file should be created");
     }
 
     @Test
-    void updateBalance_storesCorrectValue() throws IOException {
-        storage.updateBalance(TEST_USERNAME, 150.75);
-        double balance = storage.getBalance(TEST_USERNAME);
-        assertEquals(150.75, balance, 0.001, "Stored balance should match");
+    void recordTransaction_appendsToExistingFile() throws IOException {
+        // First transaction
+        storage.recordTransaction(TEST_USERNAME, TEST_ACCOUNT, "Deposit $100");
+        // Second transaction
+        storage.recordTransaction(TEST_USERNAME, TEST_ACCOUNT, "Withdraw $50");
+        
+        List<String> transactions = storage.getAccountHistory(TEST_USERNAME, TEST_ACCOUNT);
+        assertEquals(2, transactions.size(), "Should have two transactions");
     }
 
+
     @Test
-    void getBalance_returnsZeroForNewAccount() throws IOException {
-        double balance = storage.getBalance("nonexistent_user");
-        assertEquals(0.0, balance, "New accounts should have 0 balance");
+    void getAccountHistory_returnsEmptyForNewAccount() throws IOException {
+        List<String> history = storage.getAccountHistory(TEST_USERNAME, TEST_ACCOUNT);
+        assertTrue(history.isEmpty(), "New account should have empty history");
     }
 
     @Test
     void getLastFiveTransactions_returnsCorrectTransactions() throws IOException {
         // Add 7 transactions
         for (int i = 1; i <= 7; i++) {
-            storage.recordTransaction(TEST_USERNAME, "Transaction " + i);
+            storage.recordTransaction(TEST_USERNAME, TEST_ACCOUNT, "Transaction " + i);
         }
         
-        List<String> lastFive = storage.getLastFiveTransactions(TEST_USERNAME);
+        List<String> lastFive = storage.getLastFiveTransactions(TEST_USERNAME, TEST_ACCOUNT);
         assertEquals(5, lastFive.size(), "Should return exactly 5 transactions");
-        assertTrue(lastFive.get(0).contains("Transaction 3"), "Should return most recent transactions");
+        assertTrue(lastFive.get(0).contains("Transaction 3"), "Should return most recent first");
         assertTrue(lastFive.get(4).contains("Transaction 7"));
     }
+
+    @Test
+    void getLastFiveTransactions_returnsAllWhenLessThanFive() throws IOException {
+        storage.recordTransaction(TEST_USERNAME, TEST_ACCOUNT, "Only transaction");
+        List<String> result = storage.getLastFiveTransactions(TEST_USERNAME, TEST_ACCOUNT);
+        assertEquals(1, result.size(), "Should return all transactions when less than 5");
+    }
+
+    @Test
+    void multipleAccounts_haveSeparateHistories() throws IOException {
+        String account2 = "Savings1";
+        storage.recordTransaction(TEST_USERNAME, TEST_ACCOUNT, "Checking transaction");
+        storage.recordTransaction(TEST_USERNAME, account2, "Savings transaction");
+        
+        List<String> checkingHistory = storage.getAccountHistory(TEST_USERNAME, TEST_ACCOUNT);
+        List<String> savingsHistory = storage.getAccountHistory(TEST_USERNAME, account2);
+        
+        assertEquals(1, checkingHistory.size());
+        assertEquals(1, savingsHistory.size());
+        assertTrue(checkingHistory.get(0).contains("Checking"));
+        assertTrue(savingsHistory.get(0).contains("Savings"));
+    }
+}
 
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     @Nested
@@ -84,4 +113,3 @@ class AccountStorageTest {
         }
     }
 
-}
