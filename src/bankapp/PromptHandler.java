@@ -284,6 +284,7 @@ public class PromptHandler {
             
             System.out.println("5. View Transaction History");
             System.out.println("6. View Last 5 Transactions");
+            System.out.println("7. Transfer to Another Account");
             System.out.println("0. Return to Account Selection");
             System.out.println("==============================");
             
@@ -330,6 +331,9 @@ public class PromptHandler {
                     } catch (IOException e) {
                         System.out.println("Error retrieving last 5 transactions: " + e.getMessage());
                     }
+                    break;
+                case "7":
+                    TransferHandler.handleTransfer(accountManager, account, scanner);
                     break;
                 case "0":
                     exitRequested = true;
