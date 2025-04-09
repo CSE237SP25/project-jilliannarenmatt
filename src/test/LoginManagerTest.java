@@ -1,11 +1,12 @@
 package test;
+
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import login.LoginManager;
-import login.User;
-import login.UserManager;
+import bankapp.LoginManager;
+import bankapp.User;
+import bankapp.UserManager;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

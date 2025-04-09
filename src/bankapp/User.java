@@ -15,6 +15,9 @@ import java.util.Base64;
 public class User {
     private String username;
     private String passwordHash;
+    private UserProfile profile;
+    private AccountManager accountManager;
+
     // Store the file in a data directory to make it more organized
     private static final String USER_FILE = "data/users.txt";
     private boolean isExistingUser;
@@ -67,8 +70,9 @@ public class User {
         this.username = usernameText;
         this.passwordHash = hashPassword(passwordText);
         this.isExistingUser = false;
+        this.accountManager = new AccountManager(usernameText);
     }
-    
+
     /**
      * Constructor for loading an existing user from stored data.
      * Uses a flag parameter to distinguish from the other constructor.
@@ -81,6 +85,16 @@ public class User {
         this.username = usernameText;
         this.passwordHash = passwordHashText;
         this.isExistingUser = isExisting;
+        this.accountManager = new AccountManager(usernameText);
+        
+        // Load accounts for existing users
+        if (isExisting) {
+            this.accountManager.loadAccounts();
+        }
+    }
+    
+    public AccountManager getAccountManager() {
+        return accountManager;
     }
     
     /**
@@ -139,6 +153,18 @@ public class User {
     public boolean validatePassword(String passwordText) {
         String hashedInput = hashPassword(passwordText);
         return passwordHash.equals(hashedInput);
+    }
+    
+    /**
+     * Gets the user's profile, loading it if necessary.
+     * 
+     * @return The user's profile
+     */
+    public UserProfile getProfile() {
+        if (profile == null) {
+            profile = UserProfile.loadProfile(username);
+        }
+        return profile;
     }
     
     /**

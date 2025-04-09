@@ -1,11 +1,14 @@
-package ActionsTesting;
+package test;
 
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.util.Scanner;
-import AccountActions.BankAccount;
-import AccountActions.PromptHandler;
+
+import bankapp.AccountManager;
+import bankapp.BankAccount;
+import bankapp.CheckingAccount;
+import bankapp.PromptHandler;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -41,9 +44,10 @@ class PromptHandlerTest {
         ) + "\n";
 
         Scanner scanner = new Scanner(new ByteArrayInputStream(input.getBytes()));
-        BankAccount account = new BankAccount("Checking");
+        bankapp.BankAccount account = new CheckingAccount("Checking");
+        bankapp.AccountManager manager = new AccountManager("mike");
 
-        PromptHandler.commandLoop(account, scanner);
+        PromptHandler.commandLoop(manager,account, scanner);
 
         assertEquals(70.0, account.getBalance(), 0.001);
     }

@@ -1,55 +1,90 @@
-package ActionsTesting;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import AccountActions.BankAccount;
+package test;
 
 import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+
+import bankapp.BankAccount;
+import bankapp.CheckingAccount;
+import bankapp.SavingsAccount;
 
 class BankAccountTest {
-    private BankAccount checkingAccount;
+
+    private static final String TEST_ACCOUNT_NAME = "Test Account";
     
-    @BeforeEach
-    void setUp() {
-    	// initialize our empty checking account
-        checkingAccount = new BankAccount("Checking");
-    }
-
     @Test
-    void testInitialBalanceIsZero() {
-    	// account starts at zero dollars
-        assertEquals(0.0, checkingAccount.getBalance(), 0.001);
+    void testCheckingAccountCreation() {
+        BankAccount account = new CheckingAccount(TEST_ACCOUNT_NAME);
+        assertEquals(0.0, account.getBalance());
+        assertEquals(TEST_ACCOUNT_NAME, account.getAccountName());
+        assertEquals("checking", account.getAccountType());
     }
-
+    
     @Test
-    void testDepositIncreasesBalance() {
-    	// does the deposit put the right amount into the account?
-        checkingAccount.deposit(100.0);
-        assertEquals(100.0, checkingAccount.getBalance(), 0.001);
+    void testSavingsAccountCreation() {
+        double interestRate = 2.5;
+        BankAccount account = new SavingsAccount(TEST_ACCOUNT_NAME, interestRate);
+        assertEquals(0.0, account.getBalance());
+        assertEquals(TEST_ACCOUNT_NAME, account.getAccountName());
+        assertEquals("savings", account.getAccountType());
     }
-
+    
     @Test
-    void testWithdrawReducesBalanceWhenSufficientFunds() {
-        checkingAccount.deposit(200.0);
-        boolean success = checkingAccount.withdraw(150.0);
-        // you should be able to withdraw an amount less than the balance.
-        assertTrue(success);
-        assertEquals(50.0, checkingAccount.getBalance(), 0.001);
+    void testDeposit() {
+        BankAccount account = new CheckingAccount(TEST_ACCOUNT_NAME);
+        account.deposit(100.0);
+        assertEquals(100.0, account.getBalance());
+        
+        account.deposit(50.0);
+        assertEquals(150.0, account.getBalance());
     }
-
+    
     @Test
-    void testWithdrawFailsWhenInsufficientFunds() {
-        checkingAccount.deposit(50.0);
-        boolean success = checkingAccount.withdraw(100.0);
-        assertFalse(success);
-        // shouldn't be able to withdraw more than balance
-        assertEquals(50.0, checkingAccount.getBalance(), 0.001);
+    void testWithdrawalSufficientFunds() {
+        BankAccount account = new CheckingAccount(TEST_ACCOUNT_NAME);
+        account.deposit(100.0);
+        
+        boolean result = account.withdraw(50.0);
+        
+        assertTrue(result);
+        assertEquals(50.0, account.getBalance());
     }
-
+    
     @Test
-    void testGetAccountType() {
-    	// check our accountType (will be useful when savings implemented)
-        assertEquals("Checking", checkingAccount.getAccountType());
+    void testWithdrawalInsufficientFunds() {
+        BankAccount account = new CheckingAccount(TEST_ACCOUNT_NAME);
+        account.deposit(100.0);
+        
+        boolean result = account.withdraw(150.0);
+        
+        assertFalse(result);
+        assertEquals(100.0, account.getBalance()); // Balance should remain unchanged
+    }
+    
+    @Test
+    void testGetAccountName() {
+        BankAccount checkingAccount = new CheckingAccount("Personal Checking");
+        BankAccount savingsAccount = new SavingsAccount("Vacation Fund", 1.5);
+        
+        assertEquals("Personal Checking", checkingAccount.getAccountName());
+        assertEquals("Vacation Fund", savingsAccount.getAccountName());
+    }
+    
+    @Test
+    void testMultipleOperations() {
+        BankAccount account = new CheckingAccount(TEST_ACCOUNT_NAME);
+        
+        account.deposit(100.0);
+        assertEquals(100.0, account.getBalance());
+        
+        account.deposit(50.0);
+        assertEquals(150.0, account.getBalance());
+        
+        boolean result1 = account.withdraw(30.0);
+        assertTrue(result1);
+        assertEquals(120.0, account.getBalance());
+        
+        boolean result2 = account.withdraw(200.0);
+        assertFalse(result2);
+        assertEquals(120.0, account.getBalance());
     }
 }
