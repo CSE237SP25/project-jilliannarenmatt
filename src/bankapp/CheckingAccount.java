@@ -2,8 +2,8 @@ package bankapp;
 
 public class CheckingAccount extends BankAccount {
 
-    public CheckingAccount() {
-        super();
+    public CheckingAccount(String accountName) {
+        super(accountName);
     }
 
     @Override
