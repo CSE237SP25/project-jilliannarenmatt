@@ -74,6 +74,5 @@ public class Menu {
         scanner.close();
 		System.out.println("\nThank you for using our banking system!");
 		manager.close();
-
 	}
 }
