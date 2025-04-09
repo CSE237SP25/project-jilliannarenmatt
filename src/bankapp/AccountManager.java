@@ -32,6 +32,15 @@ public class AccountManager {
         this.savingsAccounts = new ArrayList<>();
         createAccountsDirectory();
     }
+
+    /**
+     * Gets the username associated with this account manager.
+     * 
+     * @return The username
+     */
+    public String getUsername() {
+        return this.username;
+    }
     
     /**
      * Creates the directory structure for storing account data.

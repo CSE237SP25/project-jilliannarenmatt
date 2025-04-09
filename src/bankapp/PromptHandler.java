@@ -1,5 +1,6 @@
 package bankapp;
 
+import java.io.IOException;
 import java.util.Scanner;
 
 /**
@@ -155,7 +156,7 @@ public class PromptHandler {
         }
         
         System.out.println("Now managing account: " + selectedAccount.getAccountName());
-        commandLoop(selectedAccount, scanner);
+        commandLoop(accountManager, selectedAccount, scanner);
     }
     
     /**
@@ -173,13 +174,20 @@ public class PromptHandler {
      * @param account The bank account
      * @param scanner The scanner for user input
      */
-    private static void handleDeposit(BankAccount account, Scanner scanner) {
+    private static void handleDeposit(AccountManager accountManager, BankAccount account, Scanner scanner) {
+        AccountStorage accountStorage = new AccountStorage();
         System.out.print("Enter amount to deposit: $");
         try {
             double amount = Double.parseDouble(scanner.nextLine());
             if (amount > 0) {
                 // Fixed: directly call deposit method instead of DepositHandler
                 account.deposit(amount);
+                try {
+                    accountStorage.recordTransaction(accountManager.getUsername(), account.getAccountName(), "Deposit: $" + amount);
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
                 System.out.printf("Deposited $%.2f. New balance: $%.2f\n", amount, account.getBalance());
             } else {
                 System.out.println("Deposit amount must be positive.");
@@ -195,7 +203,8 @@ public class PromptHandler {
      * @param account The bank account
      * @param scanner The scanner for user input
      */
-    private static void handleWithdrawal(BankAccount account, Scanner scanner) {
+    private static void handleWithdrawal(AccountManager accountManager, BankAccount account, Scanner scanner) {
+        AccountStorage accountStorage = new AccountStorage();
         System.out.print("Enter amount to withdraw: $");
         try {
             double amount = Double.parseDouble(scanner.nextLine());
@@ -203,6 +212,12 @@ public class PromptHandler {
                 // Fixed: directly call withdraw method instead of WithdrawHandler
                 boolean success = account.withdraw(amount);
                 if (success) {
+                    try {
+                        accountStorage.recordTransaction(accountManager.getUsername(), account.getAccountName(), "Withdraw: $" + amount);
+                    } catch (IOException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
                     System.out.printf("Withdrew $%.2f. New balance: $%.2f\n", amount, account.getBalance());
                 } else {
                     System.out.println("Insufficient funds for withdrawal.");
@@ -250,7 +265,7 @@ public class PromptHandler {
      * @param account The bank account to operate on
      * @param scanner The scanner for user input
      */
-    public static void commandLoop(BankAccount account, Scanner scanner) {
+    public static void commandLoop(AccountManager accountManager, BankAccount account, Scanner scanner) {
         boolean exitRequested = false;
         
         while (!exitRequested) {
@@ -267,6 +282,9 @@ public class PromptHandler {
                 System.out.println("4. Order Checks");
             }
             
+            System.out.println("5. View Transaction History");
+            System.out.println("6. View Last 5 Transactions");
+
             System.out.println("0. Return to Account Selection");
             System.out.println("==============================");
             
@@ -278,10 +296,10 @@ public class PromptHandler {
                     displayBalance(account);
                     break;
                 case "2":
-                    handleDeposit(account, scanner);
+                    handleDeposit(accountManager, account, scanner);
                     break;
                 case "3":
-                    handleWithdrawal(account, scanner);
+                    handleWithdrawal(accountManager, account, scanner);
                     break;
                 case "4":
                     if (account instanceof SavingsAccount) {
@@ -290,6 +308,28 @@ public class PromptHandler {
                         handleOrderChecks(account);
                     } else {
                         System.out.println("Invalid option for this account type.");
+                    }
+                    break;
+                case "5":
+                    AccountStorage accountStorage = new AccountStorage();
+                    try {
+                        System.out.println("Transaction History:");
+                        for (String transaction : accountStorage.getAccountHistory(accountManager.getUsername(), account.getAccountName())) {
+                            System.out.println(transaction);
+                        }
+                    } catch (IOException e) {
+                        System.out.println("Error retrieving transaction history: " + e.getMessage());
+                    }
+                    break;
+                case "6":
+                    AccountStorage accountStorage2 = new AccountStorage();
+                    try {
+                        System.out.println("Last 5 Transactions:");
+                        for (String transaction : accountStorage2.getLastFiveTransactions(accountManager.getUsername(), account.getAccountName())) {
+                            System.out.println(transaction);
+                        }
+                    } catch (IOException e) {
+                        System.out.println("Error retrieving last 5 transactions: " + e.getMessage());
                     }
                     break;
                 case "0":
