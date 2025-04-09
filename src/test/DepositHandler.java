@@ -1,15 +1,16 @@
-package ActionsTesting;
+package test;
 
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.util.Scanner;
 import AccountActions.DepositHandler;
+import bankapp.CheckingAccount;
 import AccountActions.BankAccount;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class DepositHandlerTest {
+class DepositHandler {
 
     @Test
     void testHandleDeposit() {
@@ -18,8 +19,8 @@ class DepositHandlerTest {
         ByteArrayInputStream in = new ByteArrayInputStream(input.getBytes());
         Scanner scanner = new Scanner(in);
 
-        BankAccount account = new BankAccount("Savings");
-        DepositHandler.handle(account, scanner);
+        bankapp.BankAccount account = new CheckingAccount("Savings");
+        bankapp.DepositHandler.handle(account, scanner);
 
         assertEquals(150.75, account.getBalance(), 0.001);
     }
