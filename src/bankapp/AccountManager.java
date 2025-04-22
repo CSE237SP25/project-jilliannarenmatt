@@ -382,4 +382,22 @@ public class AccountManager {
         saveAccounts();
         return true;
     }
+    
+    public boolean removeAccount(String accountName) {
+        for (CheckingAccount account : checkingAccounts) {
+        	if (account.getAccountName().equalsIgnoreCase(accountName)) {
+                checkingAccounts.remove(account);
+                return true;
+            }
+        }
+
+        for (SavingsAccount account : savingsAccounts) {
+            if (account.getAccountName().equalsIgnoreCase(accountName)){
+                savingsAccounts.remove(account);
+                return true;
+            }
+        }
+
+        return false; // Account not found
+    }
 }
