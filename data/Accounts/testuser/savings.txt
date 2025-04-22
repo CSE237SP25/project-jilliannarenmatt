@@ -1,3 +1,2 @@
-Savings 1,0.0,1.0
-Savings 2,0.0,2.0
-Savings 3,0.0,3.0
+FromAccount,0.0,1.0
+ToAccount,0.0,1.0

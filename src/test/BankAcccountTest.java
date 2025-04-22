@@ -61,6 +61,30 @@ class BankAccountTest {
     }
     
     @Test
+    void testWithdrawalExceedsLimit() {
+        BankAccount account = new CheckingAccount("Test");
+        account.deposit(1000.0);
+        account.setWithdrawalLimit(200.0); // limit is $200 per withdrawal
+
+        boolean result = account.withdraw(300.0); // exceeds the limit
+
+        assertFalse(result, "Withdrawal should fail because it exceeds the limit");
+        assertEquals(1000.0, account.getBalance(), 0.001, "Balance should remain unchanged");
+    }
+
+    @Test
+    void testWithdrawalWithinLimitSucceeds() {
+        BankAccount account = new CheckingAccount("Test");
+        account.deposit(500.0);
+        account.setWithdrawalLimit(300.0);
+
+        boolean result = account.withdraw(200.0); // within the limit
+
+        assertTrue(result, "Withdrawal should succeed within the limit");
+        assertEquals(300.0, account.getBalance(), 0.001, "Balance should be reduced correctly");
+    }
+    
+    @Test
     void testGetAccountName() {
         BankAccount checkingAccount = new CheckingAccount("Personal Checking");
         BankAccount savingsAccount = new SavingsAccount("Vacation Fund", 1.5);
