@@ -205,6 +205,7 @@ public class PromptHandler {
      */
     private static void handleWithdrawal(AccountManager accountManager, BankAccount account, Scanner scanner) {
         AccountStorage accountStorage = new AccountStorage();
+        System.out.printf("(Per-transaction limit: $%.2f)\n", account.getWithdrawalLimit());
         System.out.print("Enter amount to withdraw: $");
         try {
             double amount = Double.parseDouble(scanner.nextLine());
