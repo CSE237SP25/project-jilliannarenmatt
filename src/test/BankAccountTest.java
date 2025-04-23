@@ -111,4 +111,64 @@ class BankAccountTest {
         assertFalse(result2);
         assertEquals(120.0, account.getBalance());
     }
+    
+    // Add a test for the overdraft functionality
+    @Test
+    void testOverdraftWithdrawal() {
+        BankAccount account = new CheckingAccount("Overdraft Test");
+        account.deposit(100.0);
+        account.setOverdraftLimit(50.0);  // Allow $50 of overdraft
+        
+        // Withdraw more than balance but within overdraft limit
+        boolean result = account.withdraw(120.0);
+        
+        assertTrue(result, "Withdrawal should succeed within overdraft limit");
+        assertEquals(-20.0, account.getBalance(), 0.001, "Balance should be negative");
+        assertEquals(20.0, account.getOverdraftAmount(), 0.001, "Overdraft amount should be tracked");
+    }
+    
+    // Add a test for the canClose functionality
+    @Test
+    void testCanClose() {
+        BankAccount account = new CheckingAccount("Close Test");
+        account.deposit(100.0);
+        
+        assertTrue(account.canClose(), "Account with positive balance should be closeable");
+        
+        account.withdraw(100.0); // Balance is now 0
+        assertTrue(account.canClose(), "Account with zero balance should be closeable");
+        
+        // Set up overdraft capability and withdraw
+        account.setOverdraftLimit(50.0);
+        account.withdraw(20.0); // Balance is now -20
+        
+        assertFalse(account.canClose(), "Account with negative balance should not be closeable");
+    }
+    
+    // Add a test for the freeze/unfreeze functionality
+    @Test
+    void testFreezeUnfreeze() {
+        BankAccount account = new CheckingAccount("Freeze Test");
+        account.deposit(100.0);
+        
+        assertFalse(account.isFrozen(), "Account should not be frozen by default");
+        
+        account.freezeAccount();
+        assertTrue(account.isFrozen(), "Account should be frozen after freezeAccount call");
+        
+        // Test that operations are blocked when account is frozen
+        account.deposit(50.0);
+        assertEquals(100.0, account.getBalance(), "Deposit should be blocked on frozen account");
+        
+        boolean withdrawResult = account.withdraw(50.0);
+        assertFalse(withdrawResult, "Withdrawal should fail on frozen account");
+        assertEquals(100.0, account.getBalance(), "Withdrawal should be blocked on frozen account");
+        
+        account.unfreezeAccount();
+        assertFalse(account.isFrozen(), "Account should not be frozen after unfreezeAccount call");
+        
+        // Now operations should work
+        account.deposit(50.0);
+        assertEquals(150.0, account.getBalance(), "Deposit should work after unfreezing");
+    }
 }

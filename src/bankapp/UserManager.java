@@ -8,17 +8,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Manager class to handle operations involving collections of users
- * and cross-user operations.
+ * Manages user accounts for the banking application.
+ * Handles user authentication, creation and lookup.
  */
 public class UserManager {
-    private static final UserManager INSTANCE = new UserManager();
+    private static UserManager instance;
+    private List<User> users;
     
     /**
-     * Private constructor for singleton
+     * Private constructor for singleton pattern.
      */
     private UserManager() {
-        // Private constructor
+        users = new ArrayList<>();
+        loadUsers();
     }
     
     /**
@@ -27,65 +29,75 @@ public class UserManager {
      * @return The UserManager instance
      */
     public static UserManager getInstance() {
-        return INSTANCE;
-    }
-    
-    /**
-     * Checks if a username already exists in the system.
-     * 
-     * @param usernameText The username to check
-     * @return true if username exists, false otherwise
-     */
-    public boolean usernameExists(String usernameText) {
-        List<User> users = loadAllUsers();
-        for (User user : users) {
-            if (user.getUsername().equalsIgnoreCase(usernameText)) {
-                return true;
-            }
+        if (instance == null) {
+            instance = new UserManager();
         }
-        return false;
+        return instance;
     }
     
     /**
-     * Loads all users from the data file.
-     * 
-     * @return List of all users
+     * Loads users from the data file.
      */
-    public List<User> loadAllUsers() {
-        List<User> users = new ArrayList<>();
+    private void loadUsers() {
         File file = new File(User.getUserFilePath());
         
-        // Ensure file exists
-        User.initializeUserFile();
+        if (!file.exists()) {
+            System.out.println("No existing users file found. Starting with empty user list.");
+            return;
+        }
+        
+        users.clear();
         
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(",");
-                if (parts.length >= 2) {
-                    String usernameText = parts[0];
-                    String passwordHashText = parts[1];
-                    users.add(User.loadExistingUser(usernameText, passwordHashText));
+                User user = parseUserFromLine(line);
+                if (user != null) {
+                    users.add(user);
                 }
             }
         } catch (IOException e) {
             System.err.println("Error loading users: " + e.getMessage());
         }
-        
-        return users;
     }
     
     /**
-     * Authenticates a user login attempt.
+     * Parses a user from a line in the users file.
      * 
-     * @param usernameText The username to authenticate
-     * @param passwordText The password to authenticate
-     * @return The authenticated User object if successful, null otherwise
+     * @param line The line to parse
+     * @return The user object or null if the line is invalid
      */
-    public User login(String usernameText, String passwordText) {
-        List<User> users = loadAllUsers();
+    private User parseUserFromLine(String line) {
+        String[] parts = line.split(",");
+        if (parts.length != 2) {
+            System.err.println("Invalid user format in file: " + line);
+            return null;
+        }
+            
+        String username = parts[0];
+        String passwordHash = parts[1];
+        return User.loadExistingUser(username, passwordHash);
+    }
+    
+    /**
+     * Checks if a username already exists.
+     * 
+     * @param username The username to check
+     * @return true if the username exists, false otherwise
+     */
+    public boolean usernameExists(String username) {
+        return findUserByUsername(username) != null;
+    }
+    
+    /**
+     * Finds a user by their username.
+     * 
+     * @param username The username to search for
+     * @return The user with the specified username, or null if not found
+     */
+    private User findUserByUsername(String username) {
         for (User user : users) {
-            if (user.getUsername().equalsIgnoreCase(usernameText) && user.validatePassword(passwordText)) {
+            if (user.getUsername().equals(username)) {
                 return user;
             }
         }
@@ -93,37 +105,79 @@ public class UserManager {
     }
     
     /**
-     * Creates a new user account if it passes all validation.
+     * Authenticates a user with their username and password.
      * 
-     * @param usernameText The username for the new account
-     * @param passwordText The password for the new account
-     * @return The new User object if creation was successful, null otherwise
+     * @param username The username
+     * @param password The password
+     * @return The authenticated user, or null if authentication failed
      */
-    public User createAccount(String usernameText, String passwordText) {
-        // Validate username and password
-        if (!Username.instance().isValid(usernameText)) {
+    public User login(String username, String password) {
+        User user = findUserByUsername(username);
+        
+        if (user == null) {
+            return null; // User not found
+        }
+        
+        if (!user.validatePassword(password)) {
+            return null; // Invalid password
+        }
+        
+        return user; // Authentication successful
+    }
+    
+    /**
+     * Creates a new user account.
+     * 
+     * @param username The username for the new account
+     * @param password The password for the new account
+     * @return The newly created user, or null if creation failed
+     */
+    public User createAccount(String username, String password) {
+        if (usernameExists(username)) {
+            System.out.println("Username already exists: " + username);
             return null;
         }
         
-        if (!Password.instance().isValid(passwordText)) {
+        User newUser = createNewUser(username, password);
+        if (newUser == null) {
             return null;
         }
         
-        // Check if username already exists - keeping this check here for extra safety
-        if (usernameExists(usernameText)) {
-            System.out.println("Username already exists: " + usernameText);
+        users.add(newUser);
+        return newUser;
+    }
+    
+    /**
+     * Creates a new user object and saves it.
+     * 
+     * @param username The username
+     * @param password The password
+     * @return The new user or null if saving failed
+     */
+    private User createNewUser(String username, String password) {
+        User newUser = new User(username, password);
+        
+        if (!newUser.saveUser()) {
+            System.out.println("Failed to save user to file.");
             return null;
         }
         
-        // Create and save new user
-        User newUser = new User(usernameText, passwordText);
-        if (newUser.saveUser()) {
-            // Initialize and save an empty profile for the new user
-            UserProfile newProfile = new UserProfile(usernameText);
-            newProfile.saveProfile();
-            return newUser;
-        }
-        
-        return null;
+        return newUser;
+    }
+    
+    /**
+     * Refreshes the user list from the data file.
+     */
+    public void refreshUsers() {
+        loadUsers();
+    }
+    
+    /**
+     * Gets the number of registered users.
+     * 
+     * @return The number of users
+     */
+    public int getUserCount() {
+        return users.size();
     }
 }
