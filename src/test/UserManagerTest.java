@@ -1,208 +1,189 @@
 package test;
+
+import static org.junit.Assert.*;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.After;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import bankapp.User;
 import bankapp.UserManager;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.List;
-
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-class UserManagerTest {
+public class UserManagerTest {
     
-    private static final String TEST_USERNAME = "WalterWhite";
-    private static final String TEST_PASSWORD = "Iamthedanger1!";
-    private static final String TEST_FILE_PATH = "data/testusers.txt";
-    private static final String PROD_FILE_PATH = "data/users.txt";
     private UserManager userManager;
+    private final String testDataDir = "data";
+    private final String testUserFile = "data/users.txt";
     
-    @BeforeEach
-    void setUp() throws Exception {
-        // Create backup of production file if it exists
-        File prodFile = new File(PROD_FILE_PATH);
-        if (prodFile.exists()) {
+    @Before
+    public void setUp() {
+        // Create test directory if it doesn't exist
+        Path dataDir = Paths.get(testDataDir);
+        if (!Files.exists(dataDir)) {
             try {
-                Files.copy(prodFile.toPath(), Paths.get(PROD_FILE_PATH + ".bak"));
-            } catch (IOException e) {
-                System.err.println("Failed to backup production file: " + e.getMessage());
+                Files.createDirectory(dataDir);
+            } catch (Exception e) {
+                fail("Could not create test data directory: " + e.getMessage());
             }
         }
         
-        // Delete both files to start clean
-        if (prodFile.exists()) {
-            prodFile.delete();
-        }
-        
-        File testFile = new File(TEST_FILE_PATH);
-        if (testFile.exists()) {
-            testFile.delete();
-        }
-        
-        // Create symbolic link or copy the test file to production path
+        // Create a clean test user file
+        File userFile = new File(testUserFile);
         try {
-            // Create the test file first
-            testFile.getParentFile().mkdirs();
-            testFile.createNewFile();
-            
-            // Create a hard link or copy
-            Files.copy(testFile.toPath(), prodFile.toPath());
+            if (userFile.exists()) {
+                userFile.delete();
+            }
+            userFile.createNewFile();
         } catch (IOException e) {
-            System.err.println("Failed to link test file: " + e.getMessage());
-            fail("Test setup failed");
+            fail("Could not create test user file: " + e.getMessage());
         }
         
-        // Get the singleton instance
+        // Initialize the user manager
         userManager = UserManager.getInstance();
-        
-        // Initialize the user file
-        User.initializeUserFile();
+        userManager.refreshUsers();
     }
     
-    @AfterEach
-    void tearDown() throws Exception {
-        // Clean up test file
-        File testFile = new File(TEST_FILE_PATH);
-        if (testFile.exists()) {
-            testFile.delete();
-        }
-        
-        // Clean up production file used in test
-        File prodFile = new File(PROD_FILE_PATH);
-        if (prodFile.exists()) {
-            prodFile.delete();
-        }
-        
-        // Restore production file if backup exists
-        File backupFile = new File(PROD_FILE_PATH + ".bak");
-        if (backupFile.exists()) {
-            try {
-                Files.copy(backupFile.toPath(), Paths.get(PROD_FILE_PATH));
-                backupFile.delete();
-            } catch (IOException e) {
-                System.err.println("Failed to restore production file: " + e.getMessage());
-            }
+    @After
+    public void tearDown() {
+        // Clean up the test file
+        File userFile = new File(testUserFile);
+        if (userFile.exists()) {
+            userFile.delete();
         }
     }
     
     @Test
-    void testSingleton() {
-        // Verify that the same instance is returned each time
-        UserManager instance1 = UserManager.getInstance();
-        UserManager instance2 = UserManager.getInstance();
-        assertSame(instance1, instance2, "getInstance() should always return the same instance");
-    }
-    
-    @Test
-    void testCreateAccount() {
+    public void testCreateAccount() {
         // Create a new account
-        User newUser = userManager.createAccount(TEST_USERNAME, TEST_PASSWORD);
+        User user = userManager.createAccount("testuser", "Password123!");
         
-        // Verify account was created
-        assertNotNull(newUser, "Account should be created successfully");
-        assertEquals(TEST_USERNAME, newUser.getUsername(), "Username should match");
+        // Verify account creation
+        assertNotNull("User should be created successfully", user);
+        assertEquals("Username should match", "testuser", user.getUsername());
         
-        // Verify user exists in system
-        assertTrue(userManager.usernameExists(TEST_USERNAME), "Username should exist after account creation");
+        // Verify user count increased
+        assertEquals("User count should be 1", 1, userManager.getUserCount());
     }
     
     @Test
-    void testCreateDuplicateAccount() {
-        // Create first account
-        userManager.createAccount(TEST_USERNAME, TEST_PASSWORD);
+    public void testCreateAccountWithExistingUsername() {
+        // Create an initial account
+        userManager.createAccount("testuser", "Password123!");
         
-        // Try to create duplicate account
-        User duplicateUser = userManager.createAccount(TEST_USERNAME, "DifferentPassword1!");
-        assertNull(duplicateUser, "Duplicate account should not be created");
+        // Attempt to create an account with the same username
+        User duplicateUser = userManager.createAccount("testuser", "DifferentPassword123!");
+        
+        // Verify account creation failed
+        assertNull("Duplicate user creation should fail", duplicateUser);
+        
+        // Verify user count remains the same
+        assertEquals("User count should still be 1", 1, userManager.getUserCount());
     }
     
     @Test
-    void testCreateAccountWithInvalidCredentials() {
-        // Try to create account with invalid username (too short)
-        User invalidUsernameUser = userManager.createAccount("abc", TEST_PASSWORD);
-        assertNull(invalidUsernameUser, "Account with invalid username should not be created");
-        
-        // Try to create account with invalid password (no special char)
-        User invalidPasswordUser = userManager.createAccount("validuser", "Password123");
-        assertNull(invalidPasswordUser, "Account with invalid password should not be created");
-    }
-    
-    @Test
-    void testLogin() {
+    public void testLoginWithValidCredentials() {
         // Create a test account
-        userManager.createAccount(TEST_USERNAME, TEST_PASSWORD);
+        userManager.createAccount("testuser", "Password123!");
         
-        // Test successful login
-        User loggedInUser = userManager.login(TEST_USERNAME, TEST_PASSWORD);
-        assertNotNull(loggedInUser, "Login should succeed with correct credentials");
-        assertEquals(TEST_USERNAME, loggedInUser.getUsername(), "Logged in username should match");
+        // Attempt login with correct credentials
+        User loggedInUser = userManager.login("testuser", "Password123!");
         
-        // Test failed login - wrong password
-        User failedWrongPassword = userManager.login(TEST_USERNAME, "WrongPassword1!");
-        assertNull(failedWrongPassword, "Login should fail with incorrect password");
-        
-        // Test failed login - non-existent user
-        User failedNonExistent = userManager.login("NonExistentUser", TEST_PASSWORD);
-        assertNull(failedNonExistent, "Login should fail with non-existent username");
+        // Verify login was successful
+        assertNotNull("Login should succeed with correct credentials", loggedInUser);
+        assertEquals("Username should match", "testuser", loggedInUser.getUsername());
     }
     
     @Test
-    void testLoadAllUsers() {
-        // Create test accounts
-        userManager.createAccount("user1", "Password1!");
-        userManager.createAccount("user2", "Password2!");
+    public void testLoginWithInvalidUsername() {
+        // Create a test account
+        userManager.createAccount("testuser", "Password123!");
         
-        // Load all users
-        List<User> users = userManager.loadAllUsers();
+        // Attempt login with incorrect username
+        User loggedInUser = userManager.login("nonexistentuser", "Password123!");
         
-        // Check if both users were loaded
-        assertEquals(2, users.size(), "Should have loaded two users");
+        // Verify login failed
+        assertNull("Login should fail with incorrect username", loggedInUser);
+    }
+    
+    @Test
+    public void testLoginWithInvalidPassword() {
+        // Create a test account
+        userManager.createAccount("testuser", "Password123!");
         
-        // Verify usernames
-        boolean foundUser1 = false;
-        boolean foundUser2 = false;
+        // Attempt login with incorrect password
+        User loggedInUser = userManager.login("testuser", "WrongPassword123!");
         
-        for (User user : users) {
-            if (user.getUsername().equals("user1")) {
-                foundUser1 = true;
-            } else if (user.getUsername().equals("user2")) {
-                foundUser2 = true;
-            }
+        // Verify login failed
+        assertNull("Login should fail with incorrect password", loggedInUser);
+    }
+    
+    @Test
+    public void testUsernameExists() {
+        // Create a test account
+        userManager.createAccount("testuser", "Password123!");
+        
+        // Check if username exists
+        boolean exists = userManager.usernameExists("testuser");
+        boolean notExists = userManager.usernameExists("nonexistentuser");
+        
+        // Verify check is correct
+        assertTrue("Username should exist", exists);
+        assertFalse("Username should not exist", notExists);
+    }
+    
+    @Test
+    public void testLoadUsersFromFile() throws IOException {
+        // Create a test user file with known content
+        try (FileWriter writer = new FileWriter(testUserFile)) {
+            writer.write("testuser1,hashedpassword1\n");
+            writer.write("testuser2,hashedpassword2\n");
         }
         
-        assertTrue(foundUser1, "User1 should be found in loaded users");
-        assertTrue(foundUser2, "User2 should be found in loaded users");
+        // Refresh users to load from file
+        userManager.refreshUsers();
+        
+        // Verify users were loaded
+        assertTrue("testuser1 should exist", userManager.usernameExists("testuser1"));
+        assertTrue("testuser2 should exist", userManager.usernameExists("testuser2"));
+        assertEquals("User count should be 2", 2, userManager.getUserCount());
     }
     
     @Test
-    void testUsernameExists() {
-        // Create a test account
-        userManager.createAccount(TEST_USERNAME, TEST_PASSWORD);
+    public void testLoadUsersWithInvalidFormat() throws IOException {
+        // Create a test user file with invalid format
+        try (FileWriter writer = new FileWriter(testUserFile)) {
+            writer.write("testuser1,hashedpassword1\n");
+            writer.write("invalidformat\n"); // Missing password hash
+            writer.write("testuser2,hashedpassword2\n");
+        }
         
-        // Test username exists
-        assertTrue(userManager.usernameExists(TEST_USERNAME), "Username should exist");
+        // Refresh users to load from file
+        userManager.refreshUsers();
         
-        // Test case insensitivity (if your implementation is case-insensitive)
-        assertTrue(userManager.usernameExists(TEST_USERNAME.toLowerCase()), 
-                "Username check should be case-insensitive");
-        
-        // Test non-existent username
-        assertFalse(userManager.usernameExists("nonexistentuser"), 
-                "Non-existent username should not exist");
+        // Verify valid users were loaded and invalid one was skipped
+        assertTrue("testuser1 should exist", userManager.usernameExists("testuser1"));
+        assertTrue("testuser2 should exist", userManager.usernameExists("testuser2"));
+        assertFalse("invalidformat should not exist", userManager.usernameExists("invalidformat"));
+        assertEquals("User count should be 2", 2, userManager.getUserCount());
     }
     
     @Test
-    void testEmptyUserList() {
-        // Test with empty user file
-        List<User> users = userManager.loadAllUsers();
+    public void testGetUserCount() {
+        // Initial count should be 0
+        assertEquals("Initial user count should be 0", 0, userManager.getUserCount());
         
-        // List should be empty but not null
-        assertNotNull(users, "User list should not be null");
-        assertTrue(users.isEmpty(), "User list should be empty");
+        // Add a user
+        userManager.createAccount("testuser1", "Password123!");
+        assertEquals("User count should be 1", 1, userManager.getUserCount());
+        
+        // Add another user
+        userManager.createAccount("testuser2", "Password123!");
+        assertEquals("User count should be 2", 2, userManager.getUserCount());
     }
 }

@@ -62,21 +62,44 @@ public class AccountManager {
      * @return true if the account was successfully added, false otherwise
      */
     public boolean addCheckingAccount(String accountName, double overdraftLimit) {
-        if (checkingAccounts.size() >= MAX_CHECKING_ACCOUNTS) {
-            System.out.println("Maximum number of checking accounts (" + MAX_CHECKING_ACCOUNTS + ") reached.");
+        if (isMaxCheckingAccountsReached()) {
             return false;
         }
         
         if (isAccountNameTaken(accountName)) {
-            System.out.println("Account name '" + accountName + "' is already in use.");
             return false;
         }
         
-        CheckingAccount newAccount = new CheckingAccount(accountName);
-        newAccount.setOverdraftLimit(overdraftLimit);
+        CheckingAccount newAccount = createNewCheckingAccount(accountName, overdraftLimit);
         checkingAccounts.add(newAccount);
         saveAccounts(); // Save after adding a new account
         return true;
+    }
+    
+    /**
+     * Checks if the maximum number of checking accounts has been reached.
+     * 
+     * @return true if maximum reached, false otherwise
+     */
+    private boolean isMaxCheckingAccountsReached() {
+        if (checkingAccounts.size() >= MAX_CHECKING_ACCOUNTS) {
+            System.out.println("Maximum number of checking accounts (" + MAX_CHECKING_ACCOUNTS + ") reached.");
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * Creates a new checking account with the specified name and overdraft limit.
+     * 
+     * @param accountName The account name
+     * @param overdraftLimit The overdraft limit
+     * @return The new checking account
+     */
+    private CheckingAccount createNewCheckingAccount(String accountName, double overdraftLimit) {
+        CheckingAccount newAccount = new CheckingAccount(accountName);
+        newAccount.setOverdraftLimit(overdraftLimit);
+        return newAccount;
     }
     
     /**
@@ -97,20 +120,42 @@ public class AccountManager {
      * @return true if the account was successfully added, false otherwise
      */
     public boolean addSavingsAccount(String accountName, double interestRate) {
-        if (savingsAccounts.size() >= MAX_SAVINGS_ACCOUNTS) {
-            System.out.println("Maximum number of savings accounts (" + MAX_SAVINGS_ACCOUNTS + ") reached.");
+        if (isMaxSavingsAccountsReached()) {
             return false;
         }
         
         if (isAccountNameTaken(accountName)) {
-            System.out.println("Account name '" + accountName + "' is already in use.");
             return false;
         }
         
-        SavingsAccount newAccount = new SavingsAccount(accountName, interestRate);
+        SavingsAccount newAccount = createNewSavingsAccount(accountName, interestRate);
         savingsAccounts.add(newAccount);
         saveAccounts(); // Save after adding a new account
         return true;
+    }
+    
+    /**
+     * Checks if the maximum number of savings accounts has been reached.
+     * 
+     * @return true if maximum reached, false otherwise
+     */
+    private boolean isMaxSavingsAccountsReached() {
+        if (savingsAccounts.size() >= MAX_SAVINGS_ACCOUNTS) {
+            System.out.println("Maximum number of savings accounts (" + MAX_SAVINGS_ACCOUNTS + ") reached.");
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * Creates a new savings account with the specified name and interest rate.
+     * 
+     * @param accountName The account name
+     * @param interestRate The interest rate
+     * @return The new savings account
+     */
+    private SavingsAccount createNewSavingsAccount(String accountName, double interestRate) {
+        return new SavingsAccount(accountName, interestRate);
     }
     
     /**
@@ -123,6 +168,7 @@ public class AccountManager {
         // Check if name exists in checking accounts
         for (CheckingAccount account : checkingAccounts) {
             if (account.getAccountName().equalsIgnoreCase(accountName)) {
+                System.out.println("Account name '" + accountName + "' is already in use.");
                 return true;
             }
         }
@@ -130,6 +176,7 @@ public class AccountManager {
         // Check if name exists in savings accounts
         for (SavingsAccount account : savingsAccounts) {
             if (account.getAccountName().equalsIgnoreCase(accountName)) {
+                System.out.println("Account name '" + accountName + "' is already in use.");
                 return true;
             }
         }
@@ -190,37 +237,81 @@ public class AccountManager {
             return;
         }
         
-        // List checking accounts
+        displayCheckingAccounts();
+        displaySavingsAccounts();
+        
+        System.out.println("==========================");
+    }
+    
+    /**
+     * Displays all checking accounts and their details.
+     */
+    private void displayCheckingAccounts() {
         if (!checkingAccounts.isEmpty()) {
             System.out.println("\nChecking Accounts:");
             for (CheckingAccount account : checkingAccounts) {
-                String statusText = account.isFrozen() ? " [FROZEN]" : "";
-                String overdraftText = "";
-                if (account.getOverdraftLimit() > 0) {
-                    overdraftText = String.format(" (Overdraft Limit: $%.2f, Rate: %.2f%%)", 
-                                                 account.getOverdraftLimit(), 
-                                                 account.getOverdraftInterestRate());
-                }
-                
-                System.out.printf("- %s: $%.2f%s%s\n", 
-                                 account.getAccountName(), 
-                                 account.getBalance(),
-                                 overdraftText,
-                                 statusText);
+                displayAccountInfo(account);
             }
         }
-        
-        // List savings accounts
+    }
+    
+    /**
+     * Displays all savings accounts and their details.
+     */
+    private void displaySavingsAccounts() {
         if (!savingsAccounts.isEmpty()) {
             System.out.println("\nSavings Accounts:");
             for (SavingsAccount account : savingsAccounts) {
-                String statusText = account.isFrozen() ? " [FROZEN]" : "";
-                System.out.printf("- %s: $%.2f (Interest Rate: %.2f%%)%s\n", 
-                    account.getAccountName(), account.getBalance(), account.getInterestRate(), statusText);
+                displayAccountInfo(account);
             }
         }
+    }
+    
+    /**
+     * Displays information for a specific account.
+     * 
+     * @param account The account to display
+     */
+    private void displayAccountInfo(BankAccount account) {
+        String statusText = account.isFrozen() ? " [FROZEN]" : "";
         
-        System.out.println("==========================");
+        if (account instanceof CheckingAccount) {
+            displayCheckingAccountInfo((CheckingAccount)account, statusText);
+        } else if (account instanceof SavingsAccount) {
+            displaySavingsAccountInfo((SavingsAccount)account, statusText);
+        }
+    }
+    
+    /**
+     * Displays information for a checking account.
+     * 
+     * @param account The checking account
+     * @param statusText Text indicating if account is frozen
+     */
+    private void displayCheckingAccountInfo(CheckingAccount account, String statusText) {
+        String overdraftText = "";
+        if (account.getOverdraftLimit() > 0) {
+            overdraftText = String.format(" (Overdraft Limit: $%.2f, Rate: %.2f%%)", 
+                                         account.getOverdraftLimit(), 
+                                         account.getOverdraftInterestRate());
+        }
+        
+        System.out.printf("- %s: $%.2f%s%s\n", 
+                         account.getAccountName(), 
+                         account.getBalance(),
+                         overdraftText,
+                         statusText);
+    }
+    
+    /**
+     * Displays information for a savings account.
+     * 
+     * @param account The savings account
+     * @param statusText Text indicating if account is frozen
+     */
+    private void displaySavingsAccountInfo(SavingsAccount account, String statusText) {
+        System.out.printf("- %s: $%.2f (Interest Rate: %.2f%%)%s\n", 
+                account.getAccountName(), account.getBalance(), account.getInterestRate(), statusText);
     }
     
     /**
@@ -257,23 +348,37 @@ public class AccountManager {
         
         try (BufferedWriter writer = Files.newBufferedWriter(filePath)) {
             for (T account : accounts) {
-                // For all account types, write name, balance, and status
-                writer.write(account.getAccountName() + "," + 
-                            account.getBalance() + "," + 
-                            account.isFrozen() + "," +
-                            account.getOverdraftLimit() + "," +
-                            account.getOverdraftInterestRate() + "," + 
-                            account.getWithdrawalLimit());
-                
-                // For savings accounts, also write interest rate
-                if (account instanceof SavingsAccount) {
-                    SavingsAccount savingsAccount = (SavingsAccount) account;
-                    writer.write("," + savingsAccount.getInterestRate());
-                }
-                
-                writer.newLine();
+                writeAccountToFile(writer, account);
             }
         }
+    }
+    
+    /**
+     * Writes a single account's data to a file.
+     * 
+     * @param writer The writer to use
+     * @param account The account to write
+     * @throws IOException If there's an error writing to the file
+     */
+    private <T extends BankAccount> void writeAccountToFile(BufferedWriter writer, T account) throws IOException {
+        StringBuilder builder = new StringBuilder();
+        
+        // Add basic account information
+        builder.append(account.getAccountName()).append(",")
+               .append(account.getBalance()).append(",")
+               .append(account.isFrozen()).append(",")
+               .append(account.getOverdraftLimit()).append(",")
+               .append(account.getOverdraftInterestRate()).append(",")
+               .append(account.getWithdrawalLimit());
+        
+        // Add savings-specific information
+        if (account instanceof SavingsAccount) {
+            SavingsAccount savingsAccount = (SavingsAccount) account;
+            builder.append(",").append(savingsAccount.getInterestRate());
+        }
+        
+        writer.write(builder.toString());
+        writer.newLine();
     }
     
     /**
@@ -317,30 +422,63 @@ public class AccountManager {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",");
-                // Check for older file format with just name and balance
-                if (parts.length >= 2) {
-                    String accountName = parts[0];
-                    double balance = Double.parseDouble(parts[1]);
-                    
-                    CheckingAccount account = new CheckingAccount(accountName);
-                    account.deposit(balance); // Set the balance
-                    
-                    // Set overdraft settings if present in file (newer format)
-                    if (parts.length >= 6) {
-                        boolean isFrozen = Boolean.parseBoolean(parts[2]);
-                        double overdraftLimit = Double.parseDouble(parts[3]);
-                        double overdraftRate = Double.parseDouble(parts[4]);
-                        double withdrawalLimit = Double.parseDouble(parts[5]);
-                        
-                        if (isFrozen) account.freezeAccount();
-                        account.setOverdraftLimit(overdraftLimit);
-                        account.setOverdraftInterestRate(overdraftRate);
-                        account.setWithdrawalLimit(withdrawalLimit);
-                    }
-                    
+                if (parts.length < 2) {
+                    continue; // Skip invalid lines
+                }
+                
+                CheckingAccount account = parseCheckingAccount(parts);
+                if (account != null) {
                     checkingAccounts.add(account);
                 }
             }
+        }
+    }
+    
+    /**
+     * Parses a checking account from its string representation.
+     * 
+     * @param parts The parts of the account string
+     * @return The parsed checking account, or null if invalid
+     */
+    private CheckingAccount parseCheckingAccount(String[] parts) {
+        try {
+            String accountName = parts[0];
+            double balance = Double.parseDouble(parts[1]);
+            
+            CheckingAccount account = new CheckingAccount(accountName);
+            account.deposit(balance); // Set the balance
+            
+            // Set overdraft settings if present in file (newer format)
+            if (parts.length >= 6) {
+                configureAccountFromParts(account, parts);
+            }
+            
+            return account;
+        } catch (NumberFormatException e) {
+            System.err.println("Error parsing checking account: " + e.getMessage());
+            return null;
+        }
+    }
+    
+    /**
+     * Configures an account with settings from parsed file data.
+     * 
+     * @param account The account to configure
+     * @param parts The parts of the account string
+     */
+    private void configureAccountFromParts(BankAccount account, String[] parts) {
+        try {
+            boolean isFrozen = Boolean.parseBoolean(parts[2]);
+            double overdraftLimit = Double.parseDouble(parts[3]);
+            double overdraftRate = Double.parseDouble(parts[4]);
+            double withdrawalLimit = Double.parseDouble(parts[5]);
+            
+            if (isFrozen) account.freezeAccount();
+            account.setOverdraftLimit(overdraftLimit);
+            account.setOverdraftInterestRate(overdraftRate);
+            account.setWithdrawalLimit(withdrawalLimit);
+        } catch (NumberFormatException e) {
+            System.err.println("Error configuring account: " + e.getMessage());
         }
     }
     
@@ -355,36 +493,46 @@ public class AccountManager {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",");
+                if (parts.length < 3) {
+                    continue; // Skip invalid lines
+                }
                 
-                // Check for older format with just name, balance, and interest rate
-                if (parts.length >= 3) {
-                    String accountName = parts[0];
-                    double balance = Double.parseDouble(parts[1]);
-                    
-                    // In newer format, interest rate is at index 6
-                    double interestRate = parts.length >= 7 ? 
-                                         Double.parseDouble(parts[6]) : 
-                                         Double.parseDouble(parts[2]);
-                    
-                    SavingsAccount account = new SavingsAccount(accountName, interestRate);
-                    account.deposit(balance); // Set the balance
-                    
-                    // Set overdraft settings if present in file (newer format)
-                    if (parts.length >= 6) {
-                        boolean isFrozen = Boolean.parseBoolean(parts[2]);
-                        double overdraftLimit = Double.parseDouble(parts[3]);
-                        double overdraftRate = Double.parseDouble(parts[4]);
-                        double withdrawalLimit = Double.parseDouble(parts[5]);
-                        
-                        if (isFrozen) account.freezeAccount();
-                        account.setOverdraftLimit(overdraftLimit);
-                        account.setOverdraftInterestRate(overdraftRate);
-                        account.setWithdrawalLimit(withdrawalLimit);
-                    }
-                    
+                SavingsAccount account = parseSavingsAccount(parts);
+                if (account != null) {
                     savingsAccounts.add(account);
                 }
             }
+        }
+    }
+    
+    /**
+     * Parses a savings account from its string representation.
+     * 
+     * @param parts The parts of the account string
+     * @return The parsed savings account, or null if invalid
+     */
+    private SavingsAccount parseSavingsAccount(String[] parts) {
+        try {
+            String accountName = parts[0];
+            double balance = Double.parseDouble(parts[1]);
+            
+            // In newer format, interest rate is at index 6
+            double interestRate = parts.length >= 7 ? 
+                                 Double.parseDouble(parts[6]) : 
+                                 Double.parseDouble(parts[2]);
+            
+            SavingsAccount account = new SavingsAccount(accountName, interestRate);
+            account.deposit(balance); // Set the balance
+            
+            // Set overdraft settings if present in file (newer format)
+            if (parts.length >= 6) {
+                configureAccountFromParts(account, parts);
+            }
+            
+            return account;
+        } catch (NumberFormatException e) {
+            System.err.println("Error parsing savings account: " + e.getMessage());
+            return null;
         }
     }
     
@@ -410,39 +558,52 @@ public class AccountManager {
         AccountStorage storage = new AccountStorage();
         
         // Apply interest to checking accounts
-        for (CheckingAccount account : checkingAccounts) {
-            if (!account.isFrozen() && account.getBalance() < 0) {
-                double interestAmount = account.applyOverdraftInterest();
-                totalInterestCharged += interestAmount;
-                
-                // Record the transaction
-                try {
-                    storage.recordTransaction(username, account.getAccountName(),
-                        String.format("Overdraft Interest Charged: $%.2f", interestAmount));
-                } catch (IOException e) {
-                    System.err.println("Error recording overdraft interest transaction: " + e.getMessage());
-                }
-            }
-        }
+        totalInterestCharged += applyOverdraftInterestToAccounts(checkingAccounts, storage);
         
         // Apply interest to savings accounts (although they typically don't allow overdraft)
-        for (SavingsAccount account : savingsAccounts) {
-            if (!account.isFrozen() && account.getBalance() < 0) {
-                double interestAmount = account.applyOverdraftInterest();
-                totalInterestCharged += interestAmount;
-                
-                // Record the transaction
-                try {
-                    storage.recordTransaction(username, account.getAccountName(),
-                        String.format("Overdraft Interest Charged: $%.2f", interestAmount));
-                } catch (IOException e) {
-                    System.err.println("Error recording overdraft interest transaction: " + e.getMessage());
-                }
-            }
-        }
+        totalInterestCharged += applyOverdraftInterestToAccounts(savingsAccounts, storage);
         
         saveAccounts(); // Save changes after applying interest
         return totalInterestCharged;
+    }
+    
+    /**
+     * Applies overdraft interest to a list of accounts.
+     * 
+     * @param accounts The list of accounts
+     * @param storage The account storage for recording transactions
+     * @return The total interest charged
+     */
+    private <T extends BankAccount> double applyOverdraftInterestToAccounts(List<T> accounts, AccountStorage storage) {
+        double totalInterestCharged = 0.0;
+        
+        for (T account : accounts) {
+            if (!account.isFrozen() && account.getBalance() < 0) {
+                double interestAmount = account.applyOverdraftInterest();
+                totalInterestCharged += interestAmount;
+                
+                // Record the transaction
+                recordOverdraftInterestTransaction(storage, account, interestAmount);
+            }
+        }
+        
+        return totalInterestCharged;
+    }
+    
+    /**
+     * Records an overdraft interest transaction.
+     * 
+     * @param storage The account storage
+     * @param account The account
+     * @param interestAmount The interest amount
+     */
+    private void recordOverdraftInterestTransaction(AccountStorage storage, BankAccount account, double interestAmount) {
+        try {
+            storage.recordTransaction(username, account.getAccountName(),
+                String.format("Overdraft Interest Charged: $%.2f", interestAmount));
+        } catch (IOException e) {
+            System.err.println("Error recording overdraft interest transaction: " + e.getMessage());
+        }
     }
     
     /**
@@ -562,9 +723,27 @@ public class AccountManager {
             return false;
         }
         
+        String accountName = generateMigratedAccountName(existingAccount);
+        
+        if (existingAccount instanceof CheckingAccount) {
+            return migrateCheckingAccount((CheckingAccount)existingAccount, accountName);
+        } else if (existingAccount instanceof SavingsAccount) {
+            return migrateSavingsAccount((SavingsAccount)existingAccount, accountName);
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Generates a name for a migrated account.
+     * 
+     * @param existingAccount The existing account
+     * @return The generated name
+     */
+    private String generateMigratedAccountName(BankAccount existingAccount) {
         // Default name for migrated accounts
         String defaultName = "Primary " + existingAccount.getAccountType().substring(0, 1).toUpperCase() + 
-                             existingAccount.getAccountType().substring(1);
+                           existingAccount.getAccountType().substring(1);
         
         // If name is taken, append a number
         String accountName = defaultName;
@@ -574,32 +753,50 @@ public class AccountManager {
             suffix++;
         }
         
-        if (existingAccount instanceof CheckingAccount) {
-            if (checkingAccounts.size() >= MAX_CHECKING_ACCOUNTS) {
-                System.out.println("Cannot migrate existing checking account: maximum number reached.");
-                return false;
-            }
-            
-            CheckingAccount oldAccount = (CheckingAccount) existingAccount;
-            CheckingAccount newAccount = new CheckingAccount(accountName);
-            newAccount.deposit(oldAccount.getBalance());
-            newAccount.setOverdraftLimit(oldAccount.getOverdraftLimit());
-            newAccount.setOverdraftInterestRate(oldAccount.getOverdraftInterestRate());
-            checkingAccounts.add(newAccount);
-            
-        } else if (existingAccount instanceof SavingsAccount) {
-            if (savingsAccounts.size() >= MAX_SAVINGS_ACCOUNTS) {
-                System.out.println("Cannot migrate existing savings account: maximum number reached.");
-                return false;
-            }
-            
-            SavingsAccount oldSavings = (SavingsAccount) existingAccount;
-            SavingsAccount newAccount = new SavingsAccount(accountName, oldSavings.getInterestRate());
-            newAccount.deposit(oldSavings.getBalance());
-            newAccount.setOverdraftLimit(oldSavings.getOverdraftLimit());
-            newAccount.setOverdraftInterestRate(oldSavings.getOverdraftInterestRate());
-            savingsAccounts.add(newAccount);
+        return accountName;
+    }
+    
+    /**
+     * Migrates a checking account.
+     * 
+     * @param oldAccount The old checking account
+     * @param accountName The new account name
+     * @return true if successful, false otherwise
+     */
+    private boolean migrateCheckingAccount(CheckingAccount oldAccount, String accountName) {
+        if (checkingAccounts.size() >= MAX_CHECKING_ACCOUNTS) {
+            System.out.println("Cannot migrate existing checking account: maximum number reached.");
+            return false;
         }
+        
+        CheckingAccount newAccount = new CheckingAccount(accountName);
+        newAccount.deposit(oldAccount.getBalance());
+        newAccount.setOverdraftLimit(oldAccount.getOverdraftLimit());
+        newAccount.setOverdraftInterestRate(oldAccount.getOverdraftInterestRate());
+        checkingAccounts.add(newAccount);
+        
+        saveAccounts();
+        return true;
+    }
+    
+    /**
+     * Migrates a savings account.
+     * 
+     * @param oldAccount The old savings account
+     * @param accountName The new account name
+     * @return true if successful, false otherwise
+     */
+    private boolean migrateSavingsAccount(SavingsAccount oldAccount, String accountName) {
+        if (savingsAccounts.size() >= MAX_SAVINGS_ACCOUNTS) {
+            System.out.println("Cannot migrate existing savings account: maximum number reached.");
+            return false;
+        }
+        
+        SavingsAccount newAccount = new SavingsAccount(accountName, oldAccount.getInterestRate());
+        newAccount.deposit(oldAccount.getBalance());
+        newAccount.setOverdraftLimit(oldAccount.getOverdraftLimit());
+        newAccount.setOverdraftInterestRate(oldAccount.getOverdraftInterestRate());
+        savingsAccounts.add(newAccount);
         
         saveAccounts();
         return true;
