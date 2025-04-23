@@ -876,6 +876,32 @@ public class PromptHandler {
             return false;
         }
     }
+
+    public static void handleDepositChecks(AccountManager accountManager, BankAccount account, Scanner scanner) {
+        if (account.isFrozen()) {
+            System.out.println("This account is frozen. Unfreeze it first to deposit checks.");
+            return;
+        }
+        
+        System.out.print("Enter amount to deposit: $");
+        double amount = parseAmount(scanner);
+        
+        if (amount <= 0) {
+            System.out.println("Deposit amount must be positive.");
+            return;
+        }
+        
+        account.deposit(amount);
+        System.out.print("Enter check number: ");
+        String checkNumber = scanner.nextLine();
+        AccountStorage accountStorage = new AccountStorage();
+        try {
+            accountStorage.recordTransaction(accountManager.getUsername(), account.getAccountName(), "Deposited Check #" + checkNumber + ": $" + amount);
+        } catch (IOException e) {
+            System.err.println("Error recording transaction: " + e.getMessage());
+        }
+        
+    }
     
     /**
      * Main command loop for account operations.
@@ -914,7 +940,8 @@ public class PromptHandler {
         if (account instanceof SavingsAccount) {
             System.out.println("4. Apply Interest");
         } else if (account instanceof CheckingAccount) {
-            System.out.println("4. Order Checks");
+            System.out.println("4. Order Checks or a Debit Card");
+
         }
         
         System.out.println("5. View Transaction History");
@@ -922,7 +949,8 @@ public class PromptHandler {
         System.out.println("7. Transfer to Another Account");
         System.out.println("8. Overdraft Settings");
         System.out.println("9. " + (account.isFrozen() ? "Unfreeze" : "Freeze") + " Account");
-        System.out.println("10. Close This Account");
+        System.out.println("10. Deposit Checks");
+        System.out.println("11. Close This Account");
         System.out.println("0. Return to Account Selection");
         System.out.println("==============================");
         
@@ -969,6 +997,9 @@ public class PromptHandler {
                 handleFreezeUnfreezeAccount(accountManager, account, scanner);
                 return false;
             case "10":
+                handleDepositChecks(accountManager, account, scanner);
+                return false;
+            case "11":
                 return handleCloseAccount(accountManager, account, scanner);
             case "0":
                 return true;
