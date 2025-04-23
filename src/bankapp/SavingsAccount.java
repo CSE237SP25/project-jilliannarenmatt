@@ -6,6 +6,7 @@ public class SavingsAccount extends BankAccount {
     public SavingsAccount(String accountName, double interestRate) {
         super(accountName);
         this.interestRate = interestRate;
+        setTransferLimit(1000.0); // Standard limit for savings accounts
     }
 
     @Override
