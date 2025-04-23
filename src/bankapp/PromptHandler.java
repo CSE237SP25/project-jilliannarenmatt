@@ -447,12 +447,21 @@ public class PromptHandler {
      * @param account The bank account
      */
     private static void displayAvailableFundsInfo(BankAccount account) {
-        double availableFunds = account.getBalance() >= 0 ? 
-                              account.getBalance() + account.getOverdraftLimit() : 
-                              account.getOverdraftLimit() - Math.abs(account.getBalance());
-        
+        double availableFunds = calculateAvailableFunds(account);
         System.out.printf("Overdraft limit: $%.2f\n", account.getOverdraftLimit());
         System.out.printf("Available funds (including overdraft): $%.2f\n", availableFunds);
+    }
+    
+    /**
+     * Calculates available funds including overdraft.
+     * 
+     * @param account The bank account
+     * @return Total available funds
+     */
+    private static double calculateAvailableFunds(BankAccount account) {
+        return account.getBalance() >= 0 ? 
+            account.getBalance() + account.getOverdraftLimit() : 
+            account.getOverdraftLimit() - Math.abs(account.getBalance());
     }
     
     /**
@@ -462,37 +471,37 @@ public class PromptHandler {
      * @param account The bank account
      * @param scanner The scanner for user input
      */
-    private static void handleDeposit(AccountManager accountManager, BankAccount account, Scanner scanner) {
+    public static void handleDeposit(AccountManager accountManager, BankAccount account, Scanner scanner) {
         if (account.isFrozen()) {
             System.out.println("This account is frozen. Unfreeze it first to make deposits.");
             return;
         }
         
         System.out.print("Enter amount to deposit: $");
-        processDepositAmount(accountManager, account, scanner);
+        double amount = parseAmount(scanner);
+        
+        if (amount <= 0) {
+            System.out.println("Deposit amount must be positive.");
+            return;
+        }
+        
+        account.deposit(amount);
+        recordDepositTransaction(accountManager, account, amount);
+        displayDepositResult(amount, account.getBalance());
     }
     
     /**
-     * Processes deposit amount input and performs the deposit.
+     * Parses and validates an amount from user input.
      * 
-     * @param accountManager The account manager
-     * @param account The bank account
      * @param scanner The scanner for user input
+     * @return The amount entered, or -1 if invalid
      */
-    private static void processDepositAmount(AccountManager accountManager, BankAccount account, Scanner scanner) {
+    private static double parseAmount(Scanner scanner) {
         try {
-            double amount = Double.parseDouble(scanner.nextLine());
-            if (amount <= 0) {
-                System.out.println("Deposit amount must be positive.");
-                return;
-            }
-            
-            account.deposit(amount);
-            recordDepositTransaction(accountManager, account, amount);
-            System.out.printf("Deposited $%.2f. New balance: $%.2f\n", amount, account.getBalance());
-            
+            return Double.parseDouble(scanner.nextLine());
         } catch (NumberFormatException e) {
             System.out.println("Invalid amount. Please enter a valid number.");
+            return -1;
         }
     }
     
@@ -506,12 +515,24 @@ public class PromptHandler {
     private static void recordDepositTransaction(AccountManager accountManager, BankAccount account, double amount) {
         AccountStorage accountStorage = new AccountStorage();
         try {
-            accountStorage.recordTransaction(accountManager.getUsername(), 
-                                            account.getAccountName(), 
-                                            "Deposit: $" + amount);
+            accountStorage.recordTransaction(
+                accountManager.getUsername(), 
+                account.getAccountName(), 
+                "Deposit: $" + amount
+            );
         } catch (IOException e) {
             System.err.println("Error recording transaction: " + e.getMessage());
         }
+    }
+    
+    /**
+     * Displays the result of a deposit operation.
+     * 
+     * @param amount The amount deposited
+     * @param newBalance The new account balance
+     */
+    private static void displayDepositResult(double amount, double newBalance) {
+        System.out.printf("Deposited $%.2f. New balance: $%.2f\n", amount, newBalance);
     }
     
     /**
@@ -521,7 +542,7 @@ public class PromptHandler {
      * @param account The bank account
      * @param scanner The scanner for user input
      */
-    private static void handleWithdrawal(AccountManager accountManager, BankAccount account, Scanner scanner) {
+    public static void handleWithdrawal(AccountManager accountManager, BankAccount account, Scanner scanner) {
         if (account.isFrozen()) {
             System.out.println("This account is frozen. Unfreeze it first to make withdrawals.");
             return;
@@ -529,7 +550,23 @@ public class PromptHandler {
         
         displayWithdrawalLimits(account);
         System.out.print("Enter amount to withdraw: $");
-        processWithdrawalAmount(accountManager, account, scanner);
+        double amount = parseAmount(scanner);
+        
+        if (amount <= 0) {
+            System.out.println("Withdrawal amount must be positive.");
+            return;
+        }
+        
+        if (!account.withdraw(amount)) {
+            return; // Withdrawal failed (error message already displayed in BankAccount.withdraw)
+        }
+        
+        recordWithdrawalTransaction(accountManager, account, amount);
+        displayWithdrawalResult(amount, account.getBalance());
+        
+        if (account.getBalance() < 0) {
+            displayOverdraftWarning(account);
+        }
     }
     
     /**
@@ -541,40 +578,8 @@ public class PromptHandler {
         System.out.printf("(Per-transaction limit: $%.2f)\n", account.getWithdrawalLimit());
         
         if (account.getOverdraftLimit() > 0) {
-            double availableFunds = account.getBalance() >= 0 ? 
-                                  account.getBalance() + account.getOverdraftLimit() : 
-                                  account.getOverdraftLimit() - Math.abs(account.getBalance());
+            double availableFunds = calculateAvailableFunds(account);
             System.out.printf("Available funds (including overdraft): $%.2f\n", availableFunds);
-        }
-    }
-    
-    /**
-     * Processes withdrawal amount input and performs the withdrawal.
-     * 
-     * @param accountManager The account manager
-     * @param account The bank account
-     * @param scanner The scanner for user input
-     */
-    private static void processWithdrawalAmount(AccountManager accountManager, BankAccount account, Scanner scanner) {
-        try {
-            double amount = Double.parseDouble(scanner.nextLine());
-            if (amount <= 0) {
-                System.out.println("Withdrawal amount must be positive.");
-                return;
-            }
-            
-            boolean success = account.withdraw(amount);
-            if (success) {
-                recordWithdrawalTransaction(accountManager, account, amount);
-                System.out.printf("Withdrew $%.2f. New balance: $%.2f\n", amount, account.getBalance());
-                
-                if (account.getBalance() < 0) {
-                    displayOverdraftWarning(account);
-                }
-            }
-            
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid amount. Please enter a valid number.");
         }
     }
     
@@ -588,12 +593,24 @@ public class PromptHandler {
     private static void recordWithdrawalTransaction(AccountManager accountManager, BankAccount account, double amount) {
         AccountStorage accountStorage = new AccountStorage();
         try {
-            accountStorage.recordTransaction(accountManager.getUsername(), 
-                                           account.getAccountName(), 
-                                           "Withdraw: $" + amount);
+            accountStorage.recordTransaction(
+                accountManager.getUsername(), 
+                account.getAccountName(), 
+                "Withdraw: $" + amount
+            );
         } catch (IOException e) {
             System.err.println("Error recording transaction: " + e.getMessage());
         }
+    }
+    
+    /**
+     * Displays the result of a withdrawal operation.
+     * 
+     * @param amount The amount withdrawn
+     * @param newBalance The new account balance
+     */
+    private static void displayWithdrawalResult(double amount, double newBalance) {
+        System.out.printf("Withdrew $%.2f. New balance: $%.2f\n", amount, newBalance);
     }
     
     /**
@@ -797,6 +814,7 @@ public class PromptHandler {
             System.out.println("Account frozen successfully.");
         }
     }
+
     /**
      * Handles the process of closing a bank account.
      * 

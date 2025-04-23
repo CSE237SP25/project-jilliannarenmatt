@@ -30,29 +30,36 @@ public class LoginManager {
         while (running) {
             displayMenu();
             int choice = getIntInput("Enter your choice: ");
+            running = processMenuChoice(choice);
             
-            switch (choice) {
-                case 1:
-                    currentUser = loginUser();
-                    if (currentUser != null) {
-                        return currentUser;
-                    }
-                    break;
-                case 2:
-                    currentUser = registerUser();
-                    if (currentUser != null) {
-                        return currentUser;
-                    }
-                    break;
-                case 0:
-                    running = false;
-                    break;
-                default:
-                    System.out.println("Invalid option. Please try again.");
+            if (currentUser != null) {
+                return currentUser;
             }
         }
         
         return null;
+    }
+    
+    /**
+     * Processes the user's menu choice.
+     * 
+     * @param choice The user's menu choice
+     * @return true to continue running, false to exit
+     */
+    private boolean processMenuChoice(int choice) {
+        switch (choice) {
+            case 1:
+                currentUser = loginUser();
+                return currentUser == null;
+            case 2:
+                currentUser = registerUser();
+                return currentUser == null;
+            case 0:
+                return false;
+            default:
+                System.out.println("Invalid option. Please try again.");
+                return true;
+        }
     }
     
     /**
@@ -77,12 +84,20 @@ public class LoginManager {
         String passwordText = getStringInput("Enter your password: ");
         
         User loggedInUser = userManager.login(usernameText, passwordText);
-        if (loggedInUser != null) {
+        displayLoginResult(loggedInUser != null);
+        return loggedInUser;
+    }
+    
+    /**
+     * Displays the result of a login attempt.
+     * 
+     * @param successful Whether the login was successful
+     */
+    private void displayLoginResult(boolean successful) {
+        if (successful) {
             System.out.println("Login successful!");
-            return loggedInUser;
         } else {
             System.out.println("Invalid username or password.");
-            return null;
         }
     }
     
@@ -93,57 +108,104 @@ public class LoginManager {
      */
     private User registerUser() {
         System.out.println("\n----- REGISTER -----");
+        
+        String usernameText = getValidUsername();
+        if (usernameText == null) {
+            return null;
+        }
+        
+        String passwordText = getValidPassword();
+        if (passwordText == null) {
+            return null;
+        }
+        
+        if (!confirmPassword(passwordText)) {
+            System.out.println("Passwords do not match. Registration failed.");
+            return null;
+        }
+        
+        return createUserAccount(usernameText, passwordText);
+    }
+    
+    /**
+     * Gets a valid username from the user.
+     * 
+     * @return A valid username, or null if the process was canceled
+     */
+    private String getValidUsername() {
         System.out.println(Username.instance().getRequirements());
         
-        String usernameText = "";
+        String usernameText;
         boolean validUsername = false;
         
         while (!validUsername) {
             usernameText = getStringInput("Choose a username: ");
             
-            // First check if username already exists
             if (userManager.usernameExists(usernameText)) {
                 System.out.println("Username already exists. Please choose another one.");
-                continue; // Skip the rest of the loop and prompt again
+                continue;
             }
             
-            // Then check if the username is valid
             if (Username.instance().isValid(usernameText)) {
-                validUsername = true;
+                return usernameText;
             } else {
                 System.out.println("Invalid username. " + Username.instance().getRequirements());
             }
         }
         
+        return null;
+    }
+    
+    /**
+     * Gets a valid password from the user.
+     * 
+     * @return A valid password, or null if the process was canceled
+     */
+    private String getValidPassword() {
         System.out.println(Password.instance().getRequirements());
         
-        String passwordText = "";
+        String passwordText;
         boolean validPassword = false;
         
         while (!validPassword) {
             passwordText = getStringInput("Choose a password: ");
             if (Password.instance().isValid(passwordText)) {
-                validPassword = true;
+                return passwordText;
             } else {
                 System.out.println("Invalid password.");
                 System.out.println(Password.instance().getValidationErrors(passwordText));
             }
         }
         
+        return null;
+    }
+    
+    /**
+     * Confirms the password with the user.
+     * 
+     * @param passwordText The password to confirm
+     * @return true if the confirmation matches, false otherwise
+     */
+    private boolean confirmPassword(String passwordText) {
         String confirmPassword = getStringInput("Confirm your password: ");
-        if (!passwordText.equals(confirmPassword)) {
-            System.out.println("Passwords do not match. Registration failed.");
-            return null;
-        }
-        
+        return passwordText.equals(confirmPassword);
+    }
+    
+    /**
+     * Creates a new user account.
+     * 
+     * @param usernameText The username for the new account
+     * @param passwordText The password for the new account
+     * @return The new user, or null if account creation failed
+     */
+    private User createUserAccount(String usernameText, String passwordText) {
         User newUser = userManager.createAccount(usernameText, passwordText);
         if (newUser != null) {
             System.out.println("Registration successful!");
-            return newUser;
         } else {
             System.out.println("Error registering user. Please try again.");
-            return null;
         }
+        return newUser;
     }
     
     /**
