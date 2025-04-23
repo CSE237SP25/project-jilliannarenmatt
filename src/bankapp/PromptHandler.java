@@ -251,6 +251,11 @@ public class PromptHandler {
      * @param account The bank account
      */
     private static void handleOrderChecksAndDebitCards(AccountManager accountManager, BankAccount account, Scanner scanner) {
+        if (account.isFrozen()) {
+            System.out.println("This account is frozen. Unfreeze it first to order checks.");
+            return;
+        }
+        
         if (account instanceof CheckingAccount) {
             System.out.println("Would you like to order checks or a debit card?");
             System.out.println("1. Checks");
