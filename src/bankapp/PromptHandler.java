@@ -646,19 +646,44 @@ public class PromptHandler {
     }
     
     /**
-     * Handles ordering checks for a checking account.
+     * Handles ordering checks and debit cards for a checking account.
      * 
      * @param account The bank account
      */
-    public static void handleOrderChecks(BankAccount account) {
+    public static void handleOrderChecksAndDebitCards(AccountManager accountManager, BankAccount account, Scanner scanner) {
+
         if (account.isFrozen()) {
             System.out.println("This account is frozen. Unfreeze it first to order checks.");
             return;
         }
         
         if (account instanceof CheckingAccount) {
+            System.out.println("Would you like to order checks or a debit card?");
+            System.out.println("1. Checks");
+            System.out.println("2. Debit Card");
+            System.out.println("=============================");
+            System.out.print("Enter your choice: ");
+            String choice = scanner.nextLine();
             CheckingAccount checkingAccount = (CheckingAccount) account;
-            checkingAccount.orderChecks();
+            if (choice.equals("1")) {
+                checkingAccount.orderChecks();
+                AccountStorage accountStorage = new AccountStorage();
+                try {
+                    accountStorage.recordTransaction(accountManager.getUsername(), account.getAccountName(), "Ordered checks");
+                } catch (IOException e) {
+                    System.out.println("Error recording transaction: " + e.getMessage());
+                }
+            } else if (choice.equals("2")) {
+                String lastFour = checkingAccount.orderDebitCard();
+                AccountStorage accountStorage = new AccountStorage();
+                try {
+                    accountStorage.recordTransaction(accountManager.getUsername(), account.getAccountName(), "Ordered debit card ending in " + lastFour);
+                } catch (IOException e) {
+                    System.out.println("Error recording transaction: " + e.getMessage());
+                }
+            } else {
+                System.out.println("Invalid choice. Please try again.");
+            }
         } else {
             System.out.println("You can only order checks for a checking account.");
         }
@@ -863,6 +888,7 @@ public class PromptHandler {
         boolean exitRequested = false;
         
         while (!exitRequested) {
+
             displayOperationsMenu(account);
             String choice = scanner.nextLine();
             exitRequested = processAccountOperationChoice(choice, accountManager, account, scanner);
@@ -925,7 +951,7 @@ public class PromptHandler {
                 handleWithdrawal(accountManager, account, scanner);
                 return false;
             case "4":
-                handleOption4(account);
+                handleOption4(accountManager, account, scanner);
                 return false;
             case "5":
                 viewTransactionHistory(accountManager, account);
@@ -957,11 +983,11 @@ public class PromptHandler {
      * 
      * @param account The bank account
      */
-    private static void handleOption4(BankAccount account) {
+    private static void handleOption4(AccountManager accountManager, BankAccount account, Scanner scanner) {
         if (account instanceof SavingsAccount) {
             handleInterest(account);
         } else if (account instanceof CheckingAccount) {
-            handleOrderChecks(account);
+            handleOrderChecksAndDebitCards(accountManager, account, scanner);
         } else {
             System.out.println("Invalid option for this account type.");
         }
@@ -999,6 +1025,7 @@ public class PromptHandler {
             for (String transaction : accountStorage.getLastFiveTransactions(
                     accountManager.getUsername(), account.getAccountName())) {
                 System.out.println(transaction);
+
             }
         } catch (IOException e) {
             System.out.println("Error retrieving last 5 transactions: " + e.getMessage());
