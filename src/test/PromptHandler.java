@@ -15,32 +15,37 @@ import static org.junit.jupiter.api.Assertions.*;
 class PromptHandlerTest {
 
     @Test
-    void testOpenAccountYes() {
-        String input = "yes\n";
+    void testOpenCheckingAccount() {
+        String input = String.join("\n",
+                "1",          
+                "MyChecking"  
+            ) + "\n";
+
         Scanner scanner = new Scanner(new ByteArrayInputStream(input.getBytes()));
 
         BankAccount account = PromptHandler.openAccount(scanner);
         assertNotNull(account);
-        assertEquals("Checking", account.getAccountType());
+        assertEquals("checking", account.getAccountType());
         assertEquals(0.0, account.getBalance(), 0.001);
     }
 
     @Test
-    void testOpenAccountNo() {
+    void testOpenAccountWithInvalidInputCreatesDefault() {
         String input = "no\n";
         Scanner scanner = new Scanner(new ByteArrayInputStream(input.getBytes()));
 
         BankAccount account = PromptHandler.openAccount(scanner);
-        assertNull(account);
+        assertNotNull(account);
+        assertTrue(account instanceof CheckingAccount);
+        assertEquals("Default Checking", account.getAccountName());
     }
-
     @Test
     void testCommandLoopDepositWithdrawDone() {
         // Simulates: deposit 100 → withdraw 30 → done
         String input = String.join("\n",
-            "deposit", "100",
-            "withdraw", "30",
-            "done"
+            "2", "100",
+            "3", "30",
+            "0"
         ) + "\n";
 
         Scanner scanner = new Scanner(new ByteArrayInputStream(input.getBytes()));
