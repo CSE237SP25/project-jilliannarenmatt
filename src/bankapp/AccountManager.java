@@ -691,6 +691,22 @@ public class AccountManager {
     }
     
     /**
+     * Sets the transfer limit for an account.
+     * 
+     * @param accountName The name of the account
+     * @param transferLimit The new transfer limit
+     * @return true if successful, false if account not found
+     */
+    public boolean setTransferLimit(String accountName, double transferLimit) {
+        BankAccount account = getAccountByName(accountName);
+        if (account != null) {
+            account.setTransferLimit(transferLimit);
+            return true;
+        }
+        return false;
+    }
+    
+    /**
      * Closes an account if it has a zero or positive balance.
      * 
      * @param accountName The name of the account to close

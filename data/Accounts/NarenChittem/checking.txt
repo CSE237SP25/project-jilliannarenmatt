@@ -1,0 +1,2 @@
+College,0.0,false,0.0,15.0,10000.0
+Highschool,0.0,false,0.0,15.0,10000.0

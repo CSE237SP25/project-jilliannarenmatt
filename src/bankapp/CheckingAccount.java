@@ -5,6 +5,7 @@ public class CheckingAccount extends BankAccount {
 
     public CheckingAccount(String accountName) {
         super(accountName);
+        setTransferLimit(2000.0); // Higher limit for checking accounts
     }
 
     @Override
