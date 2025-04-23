@@ -834,7 +834,10 @@ public class PromptHandler {
             return false;
         }
         
-        if (!confirmAccountClosure(scanner)) {
+        System.out.print("Are you sure you want to close this account? This action cannot be undone. (yes/no): ");
+        String confirmation = scanner.nextLine().trim().toLowerCase();
+
+        if (!confirmation.equals("yes")) {
             System.out.println("Account closure canceled.");
             return false;
         }
@@ -842,23 +845,11 @@ public class PromptHandler {
         boolean removed = accountManager.closeAccount(account.getAccountName());
         if (removed) {
             System.out.println("Account closed successfully.");
-            return true;
+            return true; 
         } else {
             System.out.println("Error closing account.");
             return false;
         }
-    }
-    
-    /**
-     * Confirms with the user that they want to close an account.
-     * 
-     * @param scanner The scanner for user input
-     * @return true if confirmed, false otherwise
-     */
-    private static boolean confirmAccountClosure(Scanner scanner) {
-        System.out.print("Are you sure you want to close this account? This action cannot be undone. (yes/no): ");
-        String confirmation = scanner.nextLine().trim().toLowerCase();
-        return confirmation.equals("yes");
     }
     
     /**
