@@ -6,6 +6,28 @@ Team Members:
 * Naren Chittem
 * Matt Walker
 
+Iteration #3
+
+What user stories were completed this iteration?
+
+* Close accounts
+* Withdraw limits
+* Transfer limits
+* Overdrafting
+* Freeze accounts
+* Deposit checks
+* Order a debit card
+
+
+Is there anything that you implemented but doesn't currently work?
+
+Not that we have found yet!
+
+What commands are needed to compile and run your code from the command line (please provide a script that users can run to launch your program)?
+
+./runBank.sh
+
+
 Iteration #2
 
 What user stories were completed this iteration?

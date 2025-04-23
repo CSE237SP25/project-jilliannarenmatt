@@ -18,7 +18,7 @@ public class WithdrawHandler {
         } 
         // user with insufficient funds can't withdraw.
         else {
-            System.out.println("Insufficient funds. Current balance: " + account.getBalance());
+            System.out.println("\"Insufficient funds or limit exceeded. Current balance: " + account.getBalance());
         }
     }
 }
