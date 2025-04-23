@@ -23,6 +23,12 @@ class UserTest {
     
     @BeforeEach
     void setUp() throws Exception {
+        // Ensure the data directory exists
+        File dataDir = new File("data");
+        if (!dataDir.exists()) {
+            dataDir.mkdirs();
+        }
+        
         // Create backup of production file if it exists
         File prodFile = new File(PROD_FILE_PATH);
         if (prodFile.exists()) {
@@ -51,11 +57,17 @@ class UserTest {
             testFile.createNewFile();
             
             // Create a hard link or copy
+            if (prodFile.exists()) {
+                prodFile.delete(); // Ensure the file doesn't exist before copying
+            }
             Files.copy(testFile.toPath(), prodFile.toPath());
         } catch (IOException e) {
             System.err.println("Failed to link test file: " + e.getMessage());
             fail("Test setup failed");
         }
+        
+        // Reset the singleton UserManager instance to ensure it's using our test files
+        resetUserManagerInstance();
     }
     
     @AfterEach
@@ -76,11 +88,31 @@ class UserTest {
         File backupFile = new File(PROD_FILE_PATH + ".bak");
         if (backupFile.exists()) {
             try {
+                if (prodFile.exists()) {
+                    prodFile.delete(); // Make sure target doesn't exist
+                }
                 Files.copy(backupFile.toPath(), Paths.get(PROD_FILE_PATH));
                 backupFile.delete();
             } catch (IOException e) {
                 System.err.println("Failed to restore production file: " + e.getMessage());
             }
+        }
+        
+        // Reset UserManager to clear any cached state
+        resetUserManagerInstance();
+    }
+    
+    /**
+     * Resets the UserManager singleton instance using reflection.
+     * This ensures tests don't influence each other through the cached singleton.
+     */
+    private void resetUserManagerInstance() {
+        try {
+            java.lang.reflect.Field instance = UserManager.class.getDeclaredField("instance");
+            instance.setAccessible(true);
+            instance.set(null, null);
+        } catch (Exception e) {
+            System.err.println("Failed to reset UserManager instance: " + e.getMessage());
         }
     }
     
@@ -101,6 +133,9 @@ class UserTest {
         // Create and save a user with TEST_USERNAME
         User firstUser = new User(TEST_USERNAME, TEST_PASSWORD);
         firstUser.saveUser();
+        
+        // Force a refresh of the UserManager to recognize the new user
+        UserManager.getInstance().refreshUsers();
         
         // Create a duplicate user with the same username
         User duplicateUser = new User(TEST_USERNAME, TEST_PASSWORD);
@@ -149,6 +184,9 @@ class UserTest {
         User originalUser = new User(TEST_USERNAME, TEST_PASSWORD);
         originalUser.saveUser();
         
+        // Force a refresh to ensure UserManager sees the saved user
+        UserManager.getInstance().refreshUsers();
+        
         // Now try to login with that user
         UserManager manager = UserManager.getInstance();
         User loggedInUser = manager.login(TEST_USERNAME, TEST_PASSWORD);
@@ -180,6 +218,9 @@ class UserTest {
         User originalUser = new User(TEST_USERNAME, TEST_PASSWORD);
         boolean saveResult = originalUser.saveUser();
         assertTrue(saveResult, "User should save successfully");
+        
+        // Force a refresh to ensure UserManager sees the newly saved user
+        UserManager.getInstance().refreshUsers();
         
         // Retrieve all users and check existence
         UserManager manager = UserManager.getInstance();
