@@ -246,14 +246,38 @@ public class PromptHandler {
     }
     
     /**
-     * Handles ordering checks for a checking account.
+     * Handles ordering checks and debit cards for a checking account.
      * 
      * @param account The bank account
      */
-    private static void handleOrderChecks(BankAccount account) {
+    private static void handleOrderChecksAndDebitCards(AccountManager accountManager, BankAccount account, Scanner scanner) {
         if (account instanceof CheckingAccount) {
+            System.out.println("Would you like to order checks or a debit card?");
+            System.out.println("1. Checks");
+            System.out.println("2. Debit Card");
+            System.out.println("=============================");
+            System.out.print("Enter your choice: ");
+            String choice = scanner.nextLine();
             CheckingAccount checkingAccount = (CheckingAccount) account;
-            checkingAccount.orderChecks();
+            if (choice.equals("1")) {
+                checkingAccount.orderChecks();
+                AccountStorage accountStorage = new AccountStorage();
+                try {
+                    accountStorage.recordTransaction(accountManager.getUsername(), account.getAccountName(), "Ordered checks");
+                } catch (IOException e) {
+                    System.out.println("Error recording transaction: " + e.getMessage());
+                }
+            } else if (choice.equals("2")) {
+                String lastFour = checkingAccount.orderDebitCard();
+                AccountStorage accountStorage = new AccountStorage();
+                try {
+                    accountStorage.recordTransaction(accountManager.getUsername(), account.getAccountName(), "Ordered debit card ending in " + lastFour);
+                } catch (IOException e) {
+                    System.out.println("Error recording transaction: " + e.getMessage());
+                }
+            } else {
+                System.out.println("Invalid choice. Please try again.");
+            }
         } else {
             System.out.println("You can only order checks for a checking account.");
         }
@@ -279,7 +303,7 @@ public class PromptHandler {
             if (account instanceof SavingsAccount) {
                 System.out.println("4. Apply Interest");
             } else if (account instanceof CheckingAccount) {
-                System.out.println("4. Order Checks");
+                System.out.println("4. Order Checks or Debit Card");
             }
             
             System.out.println("5. View Transaction History");
@@ -305,7 +329,7 @@ public class PromptHandler {
                     if (account instanceof SavingsAccount) {
                         handleInterest(account);
                     } else if (account instanceof CheckingAccount) {
-                        handleOrderChecks(account);
+                        handleOrderChecksAndDebitCards(accountManager, account, scanner);
                     } else {
                         System.out.println("Invalid option for this account type.");
                     }
