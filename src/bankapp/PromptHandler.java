@@ -236,7 +236,7 @@ public class PromptHandler {
      * 
      * @param account The bank account
      */
-    private static void handleInterest(BankAccount account) {
+    public static void handleInterest(BankAccount account) {
         if (account instanceof SavingsAccount) {
             SavingsAccount savingsAccount = (SavingsAccount) account;
             savingsAccount.applyInterest();
@@ -251,12 +251,50 @@ public class PromptHandler {
      * 
      * @param account The bank account
      */
-    private static void handleOrderChecks(BankAccount account) {
+    public static void handleOrderChecks(BankAccount account) {
         if (account instanceof CheckingAccount) {
             CheckingAccount checkingAccount = (CheckingAccount) account;
             checkingAccount.orderChecks();
         } else {
             System.out.println("You can only order checks for a checking account.");
+        }
+    }
+    /**
+     * Handles the process of closing a bank account.
+     * 
+     * The account can only be closed if its balance is exactly $0.00.
+     * If the balance is greater than zero, the user is prompted to withdraw
+     * or transfer remaining funds before proceeding. The user must also confirm
+     * the closure with a "yes" input. If confirmed, the account is removed from
+     * the account manager.
+     * 
+     * @param accountManager The manager containing all of the user's accounts
+     * @param account The account to be closed
+     * @param scanner The scanner used to read user input
+     * @return true if the account was successfully closed, false otherwise
+     */
+    public static boolean handleCloseAccount(AccountManager accountManager, BankAccount account, Scanner scanner) {
+        double balance = account.getBalance();
+
+        if (balance > 0.0) {
+            System.out.printf("Cannot close account '%s'. Balance is $%.2f — please withdraw or transfer it first.\n",
+                    account.getAccountName(), balance);
+            return false;
+        }
+        System.out.print("Are you sure you want to close this account? This action cannot be undone. (yes/no): ");
+        String confirmation = scanner.nextLine().trim().toLowerCase();
+
+        if (!confirmation.equals("yes")) {
+            System.out.println("Account closure canceled.");
+            return false;
+        }
+        boolean removed = accountManager.removeAccount(account.getAccountName());
+        if (removed) {
+            System.out.println("Account closed successfully.");
+            return true; 
+        } else {
+            System.out.println("Error closing account.");
+            return false;
         }
     }
     
@@ -286,6 +324,7 @@ public class PromptHandler {
             System.out.println("5. View Transaction History");
             System.out.println("6. View Last 5 Transactions");
             System.out.println("7. Transfer to Another Account");
+            System.out.println("8. Close This Account");
             System.out.println("0. Return to Account Selection");
             System.out.println("==============================");
             
@@ -335,6 +374,11 @@ public class PromptHandler {
                     break;
                 case "7":
                     TransferHandler.handleTransfer(accountManager, account, scanner);
+                    break;
+                case "8":
+                    if (handleCloseAccount(accountManager, account, scanner)) {
+                        exitRequested = true; // Leave loop if account was closed
+                    }
                     break;
                 case "0":
                     exitRequested = true;
